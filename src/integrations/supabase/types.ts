@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dados_cliente: {
+        Row: {
+          bsuid: string
+          created_at: string
+          id: string
+          nome: string | null
+          responded: string | null
+          telefone: string | null
+        }
+        Insert: {
+          bsuid: string
+          created_at?: string
+          id?: string
+          nome?: string | null
+          responded?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          bsuid?: string
+          created_at?: string
+          id?: string
+          nome?: string | null
+          responded?: string | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      webhook_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          message_status: string | null
+          message_text: string | null
+          telefone: string | null
+          who_sent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          message_status?: string | null
+          message_text?: string | null
+          telefone?: string | null
+          who_sent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          message_status?: string | null
+          message_text?: string | null
+          telefone?: string | null
+          who_sent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
