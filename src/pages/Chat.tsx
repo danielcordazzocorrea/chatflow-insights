@@ -167,15 +167,14 @@ export default function ChatPage() {
                   <div key={m.id} className={cn("flex", isClient ? "justify-start" : "justify-end")}>
                     <div
                       className={cn(
-                        "max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-md",
+                        "max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-md",
                         isClient
-                          ? "bg-card border border-border rounded-bl-sm"
-                          : "rounded-br-sm text-primary-foreground",
+                          ? "bg-secondary border border-border/60 text-secondary-foreground rounded-bl-sm"
+                          : "bg-primary text-primary-foreground rounded-br-sm",
                       )}
-                      style={!isClient ? { background: "var(--gradient-primary)" } : {}}
                     >
-                      <p className="whitespace-pre-wrap break-words">{m.message_text}</p>
-                      <div className={cn("text-[10px] mt-1 flex items-center gap-1 justify-end", isClient ? "text-muted-foreground" : "text-primary-foreground/80")}>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{m.message_text}</p>
+                      <div className={cn("text-[10px] mt-1.5 flex items-center gap-1 justify-end", isClient ? "text-muted-foreground" : "text-primary-foreground/70")}>
                         {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         {!isClient && <CheckCheck className="h-3 w-3" />}
                       </div>
