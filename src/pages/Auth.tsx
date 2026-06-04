@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ShaderBackground from "@/components/ui/shader-background";
 import { toast } from "sonner";
 import { MessageCircle, Loader2 } from "lucide-react";
 
@@ -34,8 +35,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen grid-bg flex items-center justify-center p-4">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "var(--gradient-glow)" }} />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <ShaderBackground />
+      <div className="absolute inset-0 pointer-events-none z-0" style={{ background: "var(--gradient-glow)" }} />
       <div className="glass-panel rounded-2xl p-8 w-full max-w-md relative z-10" style={{ boxShadow: "var(--shadow-glow)" }}>
         <div className="flex flex-col items-center mb-8">
           <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-4 animate-pulse-glow" style={{ background: "var(--gradient-primary)" }}>
