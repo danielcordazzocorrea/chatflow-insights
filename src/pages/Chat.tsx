@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -7,15 +6,10 @@ import { Search, Send, Phone, CheckCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/chat")({
-  head: () => ({ meta: [{ title: "Chat — WhatsApp Automation" }] }),
-  component: ChatPage,
-});
-
 type Cliente = { id: string; bsuid: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
 type Msg = { id: string; message_id: string; message_text: string | null; message_status: string | null; who_sent: string | null; telefone: string | null; created_at: string };
 
-function ChatPage() {
+export default function ChatPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [activePhone, setActivePhone] = useState<string | null>(null);
@@ -25,6 +19,7 @@ function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    document.title = "Chat — WhatsApp Automation";
     const load = async () => {
       const [c, m] = await Promise.all([
         supabase.from("dados_cliente").select("*").order("created_at", { ascending: false }),
@@ -82,7 +77,6 @@ function ChatPage() {
     const text = input.trim();
     setInput("");
 
-    // Optimistic insert + persist. Replace with edge function call when ready.
     const { error } = await supabase.from("webhook_messages").insert({
       message_id: `local-${crypto.randomUUID()}`,
       message_text: text,
@@ -91,7 +85,6 @@ function ChatPage() {
       telefone: activePhone,
     });
 
-    // Mark client as responded
     await supabase.from("dados_cliente").update({ responded: "true" }).eq("telefone", activePhone);
 
     if (error) {
@@ -103,7 +96,6 @@ function ChatPage() {
 
   return (
     <div className="h-screen flex">
-      {/* Contatos */}
       <div className="w-80 border-r border-border flex flex-col bg-card/40">
         <div className="p-4 border-b border-border">
           <h2 className="font-bold text-lg mb-3 glow-text">Conversas</h2>
@@ -152,7 +144,6 @@ function ChatPage() {
         </div>
       </div>
 
-      {/* Conversa */}
       <div className="flex-1 flex flex-col">
         {activePhone ? (
           <>
