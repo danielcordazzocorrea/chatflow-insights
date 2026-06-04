@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -8,20 +7,16 @@ import {
 } from "recharts";
 import { Users, MessageSquare, CheckCircle2, Activity, TrendingUp } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — WhatsApp Automation" }] }),
-  component: Dashboard,
-});
-
 type Cliente = { id: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
 type Msg = { id: string; message_text: string | null; who_sent: string | null; telefone: string | null; created_at: string };
 
-function Dashboard() {
+export default function Dashboard() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Dashboard — WhatsApp Automation";
     const load = async () => {
       const [c, m] = await Promise.all([
         supabase.from("dados_cliente").select("*").order("created_at", { ascending: false }),
