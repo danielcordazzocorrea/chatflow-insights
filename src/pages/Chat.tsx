@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Phone, CheckCheck, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Search, Send, Phone, CheckCheck, Loader2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Cliente = { id: string; bsuid: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
+type Cliente = { id: string; bsuid: string; nome: string | null; telefone: string | null; responded: string | null; ia_ativa: boolean; created_at: string };
 type Msg = { id: string; message_id: string; message_text: string | null; message_status: string | null; who_sent: string | null; telefone: string | null; created_at: string };
 
 export default function ChatPage() {
