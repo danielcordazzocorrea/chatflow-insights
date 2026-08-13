@@ -68,6 +68,17 @@ export default function ChatPage() {
     [clientes, activePhone],
   );
 
+  const toggleIa = async (c: Cliente, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !c.ia_ativa;
+    const { error } = await supabase.from("dados_cliente").update({ ia_ativa: next }).eq("id", c.id);
+    if (error) {
+      toast.error("Falha ao atualizar IA: " + error.message);
+      return;
+    }
+    toast.success(next ? `IA ativada para ${c.nome ?? c.telefone}` : `IA desativada para ${c.nome ?? c.telefone}`);
+  };
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [activeMessages.length, activePhone]);
@@ -151,15 +162,32 @@ export default function ChatPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-sm truncate">{c.nome ?? c.telefone ?? "Sem nome"}</p>
-                    {last && <span className="text-[10px] text-muted-foreground shrink-0">{new Date(last.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {c.ia_ativa && <Bot className="h-3.5 w-3.5 text-primary" />}
+                      {last && <span className="text-[10px] text-muted-foreground">{new Date(last.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs text-muted-foreground truncate">{last?.message_text ?? c.telefone ?? "—"}</p>
-                    {responded ? (
-                      <CheckCheck className="h-3.5 w-3.5 text-success shrink-0" />
-                    ) : (
-                      <span className="h-2 w-2 rounded-full bg-accent shrink-0 animate-pulse" />
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <label
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Switch
+                          checked={c.ia_ativa}
+                          onCheckedChange={() => {}}
+                          onClick={(e) => toggleIa(c, e as unknown as React.MouseEvent)}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                        IA
+                      </label>
+                      {responded ? (
+                        <CheckCheck className="h-3.5 w-3.5 text-success" />
+                      ) : (
+                        <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
