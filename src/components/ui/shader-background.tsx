@@ -77,10 +77,11 @@ const ShaderBackground = () => {
 
       vec4 lines = vec4(0.0);
       // Site blue palette — deep navy → indigo (matches --background / --gradient-primary)
-      vec4 bgColor1 = vec4(0.06, 0.10, 0.22, 1.0);
-      vec4 bgColor2 = vec4(0.10, 0.18, 0.36, 1.0);
-      // Lines in the site's primary/cyan blue
-      vec4 lineColor = vec4(0.35, 0.65, 1.00, 1.0);
+      // Toned-down: darker base, more elegant without losing contrast
+      vec4 bgColor1 = vec4(0.02, 0.05, 0.12, 1.0);
+      vec4 bgColor2 = vec4(0.05, 0.10, 0.22, 1.0);
+      // Lines in the site's primary blue — slightly muted to keep things refined
+      vec4 lineColor = vec4(0.28, 0.52, 0.88, 1.0);
 
       for(int l = 0; l < linesPerGroup; l++) {
         float normalizedLineIndex = float(l) / float(linesPerGroup);

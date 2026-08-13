@@ -77,20 +77,43 @@ export default function ChatPage() {
     const text = input.trim();
     setInput("");
 
-    const { error } = await supabase.from("webhook_messages").insert({
-      message_id: `local-${crypto.randomUUID()}`,
-      message_text: text,
-      message_status: "sent",
-      who_sent: "operator",
-      telefone: activePhone,
+    // Otimista: mostra a mensagem na tela imediatamente
+    const localId = `local-${crypto.randomUUID()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: localId,
+        message_id: localId,
+        message_text: text,
+        message_status: "sending",
+        who_sent: "operator",
+        telefone: activePhone,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    // Chama a edge function send-whatsapp — ela envia pelo WhatsApp Cloud API
+    // e grava em webhook_messages (o canal realtime traz a versão oficial depois).
+    const { data, error } = await supabase.functions.invoke<{
+      ok?: boolean;
+      wamid?: string;
+      error?: string;
+      message?: string;
+    }>("send-whatsapp", {
+      body: { telefone: activePhone, message: text },
     });
 
-    await supabase.from("dados_cliente").update({ responded: "true" }).eq("telefone", activePhone);
-
-    if (error) {
-      toast.error("Falha ao enviar: " + error.message);
+    if (error || !data?.ok) {
+      const msg = data?.message || data?.error || error?.message || "Falha ao enviar";
+      toast.error("Falha ao enviar: " + msg);
+      // remove a mensagem otimista e devolve o texto pro input
+      setMessages((prev) => prev.filter((m) => m.id !== localId));
       setInput(text);
+      setSending(false);
+      return;
     }
+
+    await supabase.from("dados_cliente").update({ responded: "true" }).eq("telefone", activePhone);
     setSending(false);
   };
 
