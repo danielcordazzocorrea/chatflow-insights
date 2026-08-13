@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      configuracoes_ia: {
+        Row: {
+          ia_global_ativa: boolean
+          id: string
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          ia_global_ativa?: boolean
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ia_global_ativa?: boolean
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dados_cliente: {
         Row: {
           bsuid: string

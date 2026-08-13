@@ -6,6 +6,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
 } from "recharts";
 import { Users, MessageSquare, CheckCircle2, Activity, TrendingUp } from "lucide-react";
+import IaGlobalCard from "@/components/IaGlobalCard";
+
 
 type Cliente = { id: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
 type Msg = { id: string; message_text: string | null; who_sent: string | null; telefone: string | null; created_at: string };
@@ -90,7 +92,10 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-sm mt-1">Métricas em tempo real do canal WhatsApp</p>
       </header>
 
+      <IaGlobalCard />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
