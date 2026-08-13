@@ -39,6 +39,7 @@ export type Database = {
         Row: {
           bsuid: string
           created_at: string
+          ia_ativa: boolean
           id: string
           nome: string | null
           responded: string | null
@@ -47,6 +48,7 @@ export type Database = {
         Insert: {
           bsuid: string
           created_at?: string
+          ia_ativa?: boolean
           id?: string
           nome?: string | null
           responded?: string | null
@@ -55,6 +57,7 @@ export type Database = {
         Update: {
           bsuid?: string
           created_at?: string
+          ia_ativa?: boolean
           id?: string
           nome?: string | null
           responded?: string | null
