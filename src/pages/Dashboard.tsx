@@ -6,6 +6,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
 } from "recharts";
 import { Users, MessageSquare, CheckCircle2, Activity, TrendingUp } from "lucide-react";
+import IaGlobalCard from "@/components/IaGlobalCard";
+
 
 type Cliente = { id: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
 type Msg = { id: string; message_text: string | null; who_sent: string | null; telefone: string | null; created_at: string };
