@@ -90,7 +90,10 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-sm mt-1">Métricas em tempo real do canal WhatsApp</p>
       </header>
 
+      <IaGlobalCard />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
