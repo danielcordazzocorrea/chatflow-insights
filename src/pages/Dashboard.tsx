@@ -83,27 +83,29 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="h-screen overflow-y-auto scrollbar-thin p-8">
-      <header className="mb-8">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-[0.2em] mb-2">
-          <Activity className="h-3 w-3 text-primary animate-pulse" /> Live data
-        </div>
+    <div className="page-content h-screen overflow-y-auto scrollbar-thin p-5 sm:p-8 lg:p-10">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-[0.16em]">
+            <Activity className="h-3.5 w-3.5" /> Dados em tempo real
+          </div>
         <h1 className="text-3xl font-bold glow-text">Dashboard de Operações</h1>
         <p className="text-muted-foreground text-sm mt-1">Métricas em tempo real do canal WhatsApp</p>
+        </div>
+        <div className="status-label"><span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-2" />Sistema online</div>
       </header>
 
       <IaGlobalCard />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
 
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
-            <Card key={m.label} className="glass-panel p-5 relative overflow-hidden">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full blur-3xl opacity-30" style={{ background: m.accent }} />
-              <div className="flex items-center justify-between mb-3 relative">
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">{m.label}</span>
-                <Icon className="h-4 w-4" style={{ color: m.accent }} />
+            <Card key={m.label} className="metric-card p-5">
+              <div className="flex items-center justify-between mb-5">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">{m.label}</span>
+                <span className="metric-icon" style={{ color: m.accent, background: `${m.accent}18` }}><Icon className="h-4 w-4" /></span>
               </div>
               <div className="text-3xl font-bold tracking-tight relative">{loading ? "—" : m.value}</div>
             </Card>
@@ -112,7 +114,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="glass-panel p-6 lg:col-span-2">
+        <Card className="control-card p-6 lg:col-span-2">
           <h3 className="font-semibold mb-1">Atividade (últimos 7 dias)</h3>
           <p className="text-xs text-muted-foreground mb-4">Novos clientes e mensagens trafegadas</p>
           <ResponsiveContainer width="100%" height={280}>
@@ -128,7 +130,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </Card>
 
-        <Card className="glass-panel p-6">
+        <Card className="control-card p-6">
           <h3 className="font-semibold mb-1">Status de Resposta</h3>
           <p className="text-xs text-muted-foreground mb-4">Distribuição dos clientes</p>
           <ResponsiveContainer width="100%" height={220}>

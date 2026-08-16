@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, Navigate, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, MessagesSquare, LogOut, MessageCircle } from "lucide-react";
+import { LayoutDashboard, MessagesSquare, LogOut, MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -36,10 +36,10 @@ export default function ProtectedLayout() {
   ];
 
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-60 border-r border-sidebar-border bg-sidebar flex flex-col">
-        <div className="p-5 flex items-center gap-3 border-b border-sidebar-border">
-          <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}>
+    <div className="app-shell min-h-screen flex">
+      <aside className="app-sidebar w-[17rem] shrink-0 flex flex-col">
+        <div className="px-5 pt-6 pb-5 flex items-center gap-3">
+          <div className="brand-mark h-10 w-10 rounded-xl flex items-center justify-center">
             <MessageCircle className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
@@ -47,7 +47,8 @@ export default function ProtectedLayout() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Control Center</p>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 px-3 py-3 space-y-1">
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visão geral</p>
           {nav.map((item) => {
             const Icon = item.icon;
             return (
@@ -56,10 +57,10 @@ export default function ProtectedLayout() {
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_0_0_0_1px_oklch(0.7_0.18_240_/_0.4)]"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                      ? "bg-primary text-primary-foreground shadow-[0_8px_18px_-10px_var(--primary)]"
+                      : "text-sidebar-foreground/65 hover:bg-white/6 hover:text-sidebar-foreground",
                   )
                 }
               >
@@ -67,14 +68,15 @@ export default function ProtectedLayout() {
                   <>
                     <Icon className="h-4 w-4" />
                     {item.label}
-                    {isActive && <span className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse-glow" />}
+                    {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
                   </>
                 )}
               </NavLink>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="mx-3 mb-3 rounded-xl bg-white/5 p-3">
+          <div className="mb-3 flex items-center gap-2 text-xs text-sidebar-foreground/75"><Sparkles className="h-3.5 w-3.5 text-primary" /> Automação ativa</div>
           <Button onClick={logout} variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-destructive">
             <LogOut className="h-4 w-4 mr-2" /> Sair
           </Button>

@@ -70,10 +70,9 @@ export default function IaGlobalCard() {
   };
 
   return (
-    <Card className="glass-panel p-5 mb-6 flex items-center justify-between gap-6 relative overflow-hidden">
-      <div className="absolute -top-10 -left-6 h-28 w-28 rounded-full blur-3xl opacity-25" style={{ background: "oklch(0.7 0.18 240)" }} />
-      <div className="flex items-start gap-3 relative">
-        <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
+    <Card className="control-card p-5 mb-6 flex items-center justify-between gap-6">
+      <div className="flex items-start gap-3">
+        <div className="brand-mark h-10 w-10 rounded-xl flex items-center justify-center shrink-0">
           <Bot className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
@@ -81,8 +80,8 @@ export default function IaGlobalCard() {
           <p className="text-xs text-muted-foreground">Ativa ou desativa a IA para todos os usuários do CRM.</p>
         </div>
       </div>
-      <div className="flex items-center gap-3 relative">
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center gap-3">
+        <span className="status-label">
           IA Global: {ativa === null ? "—" : ativa ? "ON" : "OFF"}
         </span>
         {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
