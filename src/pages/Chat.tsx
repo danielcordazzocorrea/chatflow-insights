@@ -157,7 +157,7 @@ export default function ChatPage() {
                   active ? "bg-primary/12 shadow-[inset_3px_0_0_var(--primary)]" : "hover:bg-white/5",
                 )}
               >
-                <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 bg-primary text-primary-foreground">
+                <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style={{ background: "var(--gradient-primary)" }}>
                   {(c.nome ?? c.telefone ?? "?").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -201,7 +201,7 @@ export default function ChatPage() {
         {activePhone ? (
           <>
             <header className="p-5 border-b border-white/10 flex items-center gap-3 bg-white/[0.02]">
-              <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold bg-primary text-primary-foreground">
+              <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: "var(--gradient-primary)" }}>
                 {(activeCliente?.nome ?? activePhone).slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -224,7 +224,7 @@ export default function ChatPage() {
                         "max-w-[80%] rounded-2xl px-4 py-3 shadow-sm",
                         isClient
                           ? "bg-white/8 border border-white/8 text-white rounded-bl-md"
-                          : "bg-primary text-primary-foreground font-semibold rounded-br-md",
+                          : "bg-[image:var(--gradient-primary)] text-primary-foreground font-semibold rounded-br-md",
                       )}
                     >
                       <p className="whitespace-pre-wrap break-words leading-relaxed">{m.message_text}</p>
@@ -259,8 +259,8 @@ export default function ChatPage() {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="h-20 w-20 mx-auto rounded-2xl flex items-center justify-center mb-4 animate-pulse-glow bg-primary text-primary-foreground">
-                <Send className="h-8 w-8" />
+              <div className="h-20 w-20 mx-auto rounded-2xl flex items-center justify-center mb-4 animate-pulse-glow" style={{ background: "var(--gradient-primary)" }}>
+                <Send className="h-8 w-8 text-primary-foreground" />
               </div>
               <h3 className="font-semibold text-lg">Selecione uma conversa</h3>
               <p className="text-sm text-white/50">Escolha um contato à esquerda para iniciar</p>
