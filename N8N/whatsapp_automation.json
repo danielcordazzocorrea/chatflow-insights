@@ -1,0 +1,643 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "8e2bf75d-c026-43f4-9444-c0a1742e2b23",
+      "name": "WhatsApp Trigger",
+      "webhookId": "5d99b660-1767-44e8-a744-25b6dcf1930f",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "8VYcWOJ5IEJjdw1X",
+          "name": "WhatsApp OAuth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6748fc21-0090-4edb-a3f1-8b423f113a19",
+              "leftValue": "={{ $json.statuses[0].status }}",
+              "rightValue": "sent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7e1c1ebc-0546-419c-b2e5-785f99d6665e",
+              "leftValue": "={{ $json.statuses[0].status }}",
+              "rightValue": "=delivered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "25f63084-6fc7-49b1-9c71-5f46090423c1",
+              "leftValue": "={{ $json.statuses[0].status }}",
+              "rightValue": "read",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "dfa4d167-4c00-4e8e-acac-f225b27eb002",
+              "leftValue": "={{ $json.statuses[0].status }}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        64,
+        0
+      ],
+      "id": "d15d11b6-09e9-4def-b075-d4fa81539067",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WhatsApp Trigger').item.json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "Você é um assistente de Daniel Cordazzo "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1408,
+        -16
+      ],
+      "id": "3a117f7b-669a-4dff-89e4-aa576132db8b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        176
+      ],
+      "id": "d64787c4-ac99-42c6-8cbb-e66fc6feb48a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wIzCFIHwO70ZftyS",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].from_user_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1504,
+        176
+      ],
+      "id": "69d2a74b-b105-4f85-98b5-63134f0f0eda",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "knhZVO0glW1w1PH1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "824192f8-a4cb-4b9c-b344-66ff9ce58c22",
+              "leftValue": "={{ $json.bsuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        16
+      ],
+      "id": "70630b3d-f14d-4e7f-8552-663e183f27c7",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "tableId": "webhook_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $json.messages[0].id }}"
+            },
+            {
+              "fieldId": "message_status",
+              "fieldValue": "client"
+            },
+            {
+              "fieldId": "message_text",
+              "fieldValue": "={{ $json.messages[0].text.body }}"
+            },
+            {
+              "fieldId": "who_sent",
+              "fieldValue": "=client"
+            },
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $json.messages[0].from }}"
+            },
+            {
+              "fieldId": "bsuid",
+              "fieldValue": "={{ $json.messages[0].from_user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        288,
+        16
+      ],
+      "id": "07a5a656-ec5b-4dfd-9c46-2e8d2140cd59",
+      "name": "Salvar mensagem cliente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "dados_cliente",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "bsuid",
+              "keyValue": "={{ $json.bsuid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        16
+      ],
+      "id": "aabb2009-6885-4426-b0d4-65f37d3fe1c9",
+      "name": "Buscar cliente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "dados_cliente",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "bsuid",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].user_id }}"
+            },
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].profile.name }}"
+            },
+            {
+              "fieldId": "ia_ativa",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        848,
+        128
+      ],
+      "id": "9a3008ac-40e8-48df-8352-ed0c0f766aa5",
+      "name": "Criar conversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "webhook_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('HTTP Request2').item.json.messages[0].id }}"
+            },
+            {
+              "fieldId": "message_status",
+              "fieldValue": "sent"
+            },
+            {
+              "fieldId": "message_text",
+              "fieldValue": "={{ $('AI Agent').item.json.output }}"
+            },
+            {
+              "fieldId": "who_sent",
+              "fieldValue": "enterprise"
+            },
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            },
+            {
+              "fieldId": "bsuid",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        -16
+      ],
+      "id": "3cccd92c-66e6-4a43-a2ce-734248e135e7",
+      "name": "Salvar resposta",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "dados_cliente",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "bsuid",
+              "condition": "eq",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from_user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "responded",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        -16
+      ],
+      "id": "aa1ce733-11eb-4843-b5f5-a7df85eb6b71",
+      "name": "Marcar como respondido",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/1309710635548536/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}\",\n  \"recipient\": \"{{ $('WhatsApp Trigger').item.json.contacts[0].user_id }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.output }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1760,
+        -16
+      ],
+      "id": "71301886-bb73-4fdf-8fa9-2c2dd49f275a",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Ig8hG6hnCk62iKDB",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "viJ3Yk2pqsudG2yk",
+          "name": "Bearer Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0ca182fe-535a-41af-bba1-d368e9d71343",
+              "leftValue": "={{ $('Buscar cliente').item.json?.ia_ativa || $('Criar conversa').item.json?.ia_ativa }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "74c69f92-8aad-4651-a175-072943b598b2",
+              "leftValue": "={{ $json?.ia_global_ativa }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "c2fbc05b-d82e-4101-9070-d49389efe4f3",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "configuracoes_ia",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ia_global_ativa",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        992,
+        0
+      ],
+      "id": "775a6077-f8d5-4968-b8e0-52faa43eec72",
+      "name": "verificar IA global",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Salvar mensagem cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "verificar IA global",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar mensagem cliente": {
+      "main": [
+        [
+          {
+            "node": "Buscar cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar cliente": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar conversa": {
+      "main": [
+        [
+          {
+            "node": "verificar IA global",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar resposta": {
+      "main": [
+        [
+          {
+            "node": "Marcar como respondido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Salvar resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar IA global": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5c0026289730fdeff064fe0526e284ee9d4d60b440a56f65e3792e38554d3ecb"
+  }
+}
