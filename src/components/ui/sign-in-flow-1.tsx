@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 
 import * as THREE from "three";
-import { MessageCircle, Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import BrandChatIcon from "@/components/BrandChatIcon";
 
 type Uniforms = {
   [key: string]: {
@@ -393,12 +394,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
       <div className="relative z-10 flex flex-col flex-1">
         {/* Top header */}
         <header className="w-full p-6 lg:p-10 flex items-center gap-3">
-          <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center"
-            style={{ background: "var(--gradient-primary)" }}
-          >
-            <MessageCircle className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <BrandChatIcon className="h-10 w-10" />
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tight text-foreground">
               SISTEMA INTERNO
@@ -552,8 +548,8 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
           </div>
 
           {/* Right side: branding (only on large screens) */}
-          <div className="hidden lg:flex flex-1 flex-col justify-center px-12 xl:px-20 -mt-25">                                                           
-            <div className="max-w-lg space-y-6"> 
+          <div className="hidden lg:flex flex-1 flex-col justify-center px-12 xl:px-20 -mt-25">
+            <div className="max-w-lg space-y-6">
               <h2 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-foreground">
                 Automação inteligente de <span className="glow-text text-primary">WhatsApp</span>
               </h2>

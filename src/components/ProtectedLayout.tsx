@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Outlet, Navigate, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, MessagesSquare, LogOut, MessageCircle, Sparkles } from "lucide-react";
+import { LayoutDashboard, MessagesSquare, LogOut, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import BrandChatIcon from "@/components/BrandChatIcon";
 import { cn } from "@/lib/utils";
 
 export default function ProtectedLayout() {
@@ -43,9 +44,7 @@ export default function ProtectedLayout() {
     <div className="app-shell min-h-screen w-full max-w-[100vw] overflow-hidden flex flex-col">
       <header className="app-header h-16 shrink-0 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-3 sm:px-5 lg:px-8">
         <div className="flex min-w-0 shrink-0 items-center gap-2.5 justify-self-start">
-          <div className="brand-mark h-9 w-9 rounded-lg flex items-center justify-center">
-            <MessageCircle className="h-5 w-5" />
-          </div>
+          <BrandChatIcon className="h-9 w-9" />
           <div className="hidden sm:block">
             <p className="font-extrabold text-sm tracking-[0.08em]">WHATS·OPS</p>
             <p className="text-[9px] text-muted-foreground uppercase tracking-[0.18em]">
