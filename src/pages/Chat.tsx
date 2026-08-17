@@ -322,7 +322,7 @@ export default function ChatPage() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                          {!isClient && <CheckCheck className="h-3 w-3" />}
+                          {!isClient && m.message_status && <span>{m.message_status}</span>}
                         </div>
                       </div>
                     </motion.div>

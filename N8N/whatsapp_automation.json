@@ -480,6 +480,139 @@
           "name": "Whatsapp Metrics"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "webhook_messages",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.message_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_status",
+              "fieldValue": "={{ (() => {\n    const rank = { accepted: 1, sent: 2, delivered: 3, read: 4, failed: 5 };\n    const novo = $('WhatsApp Trigger').item.json.statuses[0].status\n    const atual = $('Get a row2').item.json.message_status || '';\n    return (rank[novo] || 0) >= (rank[atual] || 0) ? novo : atual;\n  })() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -128
+      ],
+      "id": "728f6822-64c9-4402-9a8d-26b7e0d00f98",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "webhook_messages",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "keyValue": "={{ $json.statuses[0].id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -128
+      ],
+      "id": "3cd55e0d-5b38-4c00-ad59-1225b6eda851",
+      "name": "Get a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bd2fd3c6-4c56-4f29-bc92-e987b978e389",
+              "leftValue": "={{ $('WhatsApp Trigger').item.json.statuses[0].status }}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        -128
+      ],
+      "id": "82be5b2b-47eb-4157-b5f8-ab023a192541",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "tableId": "tabela_erro",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "mensagem",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.statuses[0].errors[0].title }}\n{{ $('WhatsApp Trigger').item.json.statuses[0].errors[0].message }}\n{{ $('WhatsApp Trigger').item.json.statuses[0].errors[0].error_data.details }}"
+            },
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.statuses[0].recipient_id }}"
+            },
+            {
+              "fieldId": "id_campanha",
+              "fieldValue": "={{ $('Update a row2').item.json?.campanha_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        -144
+      ],
+      "id": "aef406c9-08f6-4531-9db0-2b7f1f9cad32",
+      "name": "Create a row6",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5AcHaJa9sRd8Mm0",
+          "name": "Whatsapp Metrics"
+        }
+      }
     }
   ],
   "connections": {
@@ -496,7 +629,13 @@
     },
     "If": {
       "main": [
-        [],
+        [
+          {
+            "node": "Get a row2",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Salvar mensagem cliente",
@@ -628,6 +767,39 @@
         [
           {
             "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row2": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Create a row6",
             "type": "main",
             "index": 0
           }
