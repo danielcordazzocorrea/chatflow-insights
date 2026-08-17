@@ -1,32 +1,91 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Legend,
-} from "recharts";
-import { Users, MessageSquare, CheckCircle2, Activity, TrendingUp } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Users, MessageSquare, CheckCircle2, TrendingUp } from "lucide-react";
 import IaGlobalCard from "@/components/IaGlobalCard";
+import ProgressMetricCard, { type MetricSeries } from "@/components/ui/progress-metric-card";
 
+type DateRow = { created_at: string };
+type Summary = { clientes: number; mensagens: number; respondidos: number };
 
-type Cliente = { id: string; nome: string | null; telefone: string | null; responded: string | null; created_at: string };
-type Msg = { id: string; message_text: string | null; who_sent: string | null; telefone: string | null; created_at: string };
+const PAGE_SIZE = 1000;
+
+async function fetchClienteDates(since: string) {
+  const rows: DateRow[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("dados_cliente")
+      .select("created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) return rows;
+  }
+}
+
+async function fetchMessageDates(since: string) {
+  const rows: DateRow[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("webhook_messages")
+      .select("created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) return rows;
+  }
+}
 
 export default function Dashboard() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [clientes, setClientes] = useState<DateRow[]>([]);
+  const [messages, setMessages] = useState<DateRow[]>([]);
+  const [summary, setSummary] = useState<Summary>({ clientes: 0, mensagens: 0, respondidos: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Dashboard — WhatsApp Automation";
     const load = async () => {
-      const [c, m] = await Promise.all([
-        supabase.from("dados_cliente").select("*").order("created_at", { ascending: false }),
-        supabase.from("webhook_messages").select("*").order("created_at", { ascending: false }).limit(1000),
-      ]);
-      setClientes((c.data as Cliente[]) ?? []);
-      setMessages((m.data as Msg[]) ?? []);
-      setLoading(false);
+      setLoadError(null);
+      try {
+        const windowStart = new Date();
+        windowStart.setDate(windowStart.getDate() - 29);
+        windowStart.setHours(0, 0, 0, 0);
+
+        const [clientesCount, mensagensCount, respondidosCount, clienteDates, messageDates] =
+          await Promise.all([
+            supabase.from("dados_cliente").select("id", { count: "exact", head: true }),
+            supabase.from("webhook_messages").select("id", { count: "exact", head: true }),
+            supabase
+              .from("dados_cliente")
+              .select("id", { count: "exact", head: true })
+              .eq("responded", "true"),
+            fetchClienteDates(windowStart.toISOString()),
+            fetchMessageDates(windowStart.toISOString()),
+          ]);
+
+        const queryError = clientesCount.error ?? mensagensCount.error ?? respondidosCount.error;
+        if (queryError) throw queryError;
+
+        setSummary({
+          clientes: clientesCount.count ?? 0,
+          mensagens: mensagensCount.count ?? 0,
+          respondidos: respondidosCount.count ?? 0,
+        });
+        setClientes(clienteDates);
+        setMessages(messageDates);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Não foi possível consultar o Supabase.";
+        setLoadError(message);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
 
@@ -35,30 +94,29 @@ export default function Dashboard() {
       .on("postgres_changes", { event: "*", schema: "public", table: "dados_cliente" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "webhook_messages" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const stats = useMemo(() => {
-    const total = clientes.length;
-    const responded = clientes.filter((c) => c.responded === "true").length;
+    const total = summary.clientes;
+    const responded = summary.respondidos;
     const pending = total - responded;
     const respondedPct = total ? Math.round((responded / total) * 100) : 0;
-    const totalMsgs = messages.length;
-    const clientMsgs = messages.filter((m) => m.who_sent === "client").length;
-    const botMsgs = totalMsgs - clientMsgs;
-    return { total, responded, pending, respondedPct, totalMsgs, clientMsgs, botMsgs };
-  }, [clientes, messages]);
+    return { total, responded, pending, respondedPct, totalMsgs: summary.mensagens };
+  }, [summary]);
 
   const pieData = [
     { name: "Respondidos", value: stats.responded },
     { name: "Pendentes", value: stats.pending },
   ];
-  const pieColors = ["oklch(0.72 0.18 155)", "oklch(0.78 0.2 50)"];
+  const pieColors = ["oklch(0.7 0.18 240)", "oklch(0.62 0.12 220)"];
 
   const timeData = useMemo(() => {
     const days: Record<string, { day: string; clientes: number; mensagens: number }> = {};
     const now = Date.now();
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 29; i >= 0; i--) {
       const d = new Date(now - i * 86400000);
       const key = d.toISOString().slice(0, 10);
       const label = d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit" });
@@ -75,70 +133,141 @@ export default function Dashboard() {
     return Object.values(days);
   }, [clientes, messages]);
 
+  const activitySeries = useMemo<MetricSeries[]>(
+    () => [
+      {
+        name: "Mensagens",
+        accent: "sky",
+        data: timeData.map((item) => ({ value: item.mensagens, date: item.day })),
+      },
+      {
+        name: "Clientes",
+        data: timeData.map((item) => ({ value: item.clientes, date: item.day })),
+      },
+    ],
+    [timeData],
+  );
+
   const metrics = [
     { label: "Clientes", value: stats.total, icon: Users, accent: "oklch(0.7 0.18 240)" },
-    { label: "Mensagens", value: stats.totalMsgs, icon: MessageSquare, accent: "oklch(0.78 0.2 200)" },
-    { label: "Respondidos", value: stats.responded, icon: CheckCircle2, accent: "oklch(0.72 0.18 155)" },
-    { label: "Taxa de Resposta", value: `${stats.respondedPct}%`, icon: TrendingUp, accent: "oklch(0.65 0.22 280)" },
+    {
+      label: "Mensagens",
+      value: stats.totalMsgs,
+      icon: MessageSquare,
+      accent: "oklch(0.7 0.18 240)",
+    },
+    {
+      label: "Respondidos",
+      value: stats.responded,
+      icon: CheckCircle2,
+      accent: "oklch(0.7 0.18 240)",
+    },
+    {
+      label: "Taxa de Resposta",
+      value: `${stats.respondedPct}%`,
+      icon: TrendingUp,
+      accent: "oklch(0.7 0.18 240)",
+    },
   ];
 
   return (
-    <div className="page-content h-screen overflow-y-auto scrollbar-thin p-5 sm:p-8 lg:p-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="page-content h-[calc(100vh-4rem)] overflow-x-hidden overflow-y-auto scrollbar-thin p-5 sm:p-8 lg:p-9">
+      <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-[0.16em]">
-            <Activity className="h-3.5 w-3.5" /> Dados em tempo real
-          </div>
-        <h1 className="text-3xl font-bold glow-text">Dashboard de Operações</h1>
-        <p className="text-muted-foreground text-sm mt-1">Métricas em tempo real do canal WhatsApp</p>
+          <h1 className="text-3xl lg:text-4xl font-bold tracking-[-0.04em]">
+            Dashboard de Operações
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1.5">
+            Métricas em tempo real do canal WhatsApp
+          </p>
         </div>
-        <div className="status-label"><span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-2" />Sistema online</div>
+        <div className="status-label">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-2" />
+          Sistema online
+        </div>
       </header>
 
       <IaGlobalCard />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      {loadError && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+          <span>Não foi possível carregar as métricas do Supabase: {loadError}</span>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="font-semibold text-primary hover:underline"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
 
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
-            <Card key={m.label} className="metric-card p-5">
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">{m.label}</span>
-                <span className="metric-icon" style={{ color: m.accent, background: `${m.accent}18` }}><Icon className="h-4 w-4" /></span>
+            <Card key={m.label} className="metric-card p-5 lg:p-6">
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-xs font-semibold text-muted-foreground">{m.label}</span>
+                <span
+                  className="metric-icon"
+                  style={{ color: m.accent, background: `${m.accent}18` }}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
               </div>
-              <div className="text-3xl font-bold tracking-tight relative">{loading ? "—" : m.value}</div>
+              <div className="text-3xl font-bold tracking-[-0.04em] tabular-nums relative">
+                {loading ? "—" : m.value}
+              </div>
             </Card>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="control-card p-6 lg:col-span-2">
-          <h3 className="font-semibold mb-1">Atividade (últimos 7 dias)</h3>
-          <p className="text-xs text-muted-foreground mb-4">Novos clientes e mensagens trafegadas</p>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={timeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.4 0.08 245 / 0.2)" />
-              <XAxis dataKey="day" stroke="oklch(0.7 0.04 240)" fontSize={11} />
-              <YAxis stroke="oklch(0.7 0.04 240)" fontSize={11} />
-              <Tooltip contentStyle={{ background: "oklch(0.22 0.045 250)", border: "1px solid oklch(0.4 0.08 245 / 0.4)", borderRadius: 8 }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="clientes" stroke="oklch(0.7 0.18 240)" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="mensagens" stroke="oklch(0.78 0.2 200)" strokeWidth={2} dot={{ r: 3 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <ProgressMetricCard
+          title="Clientes e mensagens"
+          total={stats.totalMsgs}
+          unit="mensagens"
+          series={activitySeries}
+          accent="sky"
+          size="md"
+          loading={loading}
+          deltaLabel="desde o dia anterior"
+          periodOptions={[
+            { label: "Últimos 7 dias", points: 7 },
+            { label: "Últimos 14 dias", points: 14 },
+            { label: "Últimos 30 dias", points: 30 },
+          ]}
+          className="lg:col-span-3"
+        />
 
         <Card className="control-card p-6">
-          <h3 className="font-semibold mb-1">Status de Resposta</h3>
+          <h3 className="font-semibold mb-1">Status de respostas</h3>
           <p className="text-xs text-muted-foreground mb-4">Distribuição dos clientes</p>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={4} stroke="none">
-                {pieData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={55}
+                outerRadius={85}
+                paddingAngle={4}
+                stroke="none"
+              >
+                {pieData.map((_, i) => (
+                  <Cell key={i} fill={pieColors[i]} />
+                ))}
               </Pie>
-              <Tooltip contentStyle={{ background: "oklch(0.22 0.045 250)", border: "1px solid oklch(0.4 0.08 245 / 0.4)", borderRadius: 8 }} />
+              <Tooltip
+                contentStyle={{
+                  background: "oklch(0.22 0.045 250)",
+                  color: "white",
+                  border: "1px solid oklch(0.4 0.08 245 / .5)",
+                  borderRadius: 10,
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-4 space-y-2">

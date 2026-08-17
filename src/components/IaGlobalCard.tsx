@@ -42,7 +42,9 @@ export default function IaGlobalCard() {
       .channel("ia-global-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "configuracoes_ia" }, load)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const persist = async (value: boolean) => {
@@ -52,7 +54,11 @@ export default function IaGlobalCard() {
 
     const res = id
       ? await supabase.from("configuracoes_ia").update({ ia_global_ativa: value }).eq("id", id)
-      : await supabase.from("configuracoes_ia").insert({ ia_global_ativa: value }).select("id").maybeSingle();
+      : await supabase
+          .from("configuracoes_ia")
+          .insert({ ia_global_ativa: value })
+          .select("id")
+          .maybeSingle();
 
     if (res.error) {
       setAtiva(prev);
@@ -70,17 +76,19 @@ export default function IaGlobalCard() {
   };
 
   return (
-    <Card className="control-card p-5 mb-6 flex items-center justify-between gap-6">
-      <div className="flex items-start gap-3">
-        <div className="brand-mark h-10 w-10 rounded-xl flex items-center justify-center shrink-0">
-          <Bot className="h-5 w-5 text-primary-foreground" />
+    <Card className="ai-control p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="ai-icon h-10 w-10 rounded-xl flex items-center justify-center shrink-0">
+          <Bot className="h-5 w-5" />
         </div>
-        <div>
-          <h3 className="font-semibold">IA Global</h3>
-          <p className="text-xs text-muted-foreground">Ativa ou desativa a IA para todos os usuários do CRM.</p>
+        <div className="min-w-0">
+          <h3 className="font-semibold">Automação de IA</h3>
+          <p className="text-xs text-muted-foreground">
+            Respostas automáticas para todos os usuários.
+          </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
         <span className="status-label">
           IA Global: {ativa === null ? "—" : ativa ? "ON" : "OFF"}
         </span>
@@ -93,7 +101,8 @@ export default function IaGlobalCard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Desativar IA global?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso desativará as respostas automáticas da IA para todos os usuários, mesmo para aqueles que estão com a IA individual ativada.
+              Isso desativará as respostas automáticas da IA para todos os usuários, mesmo para
+              aqueles que estão com a IA individual ativada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
