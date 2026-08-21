@@ -11,7 +11,7 @@
 // @ts-expect-error -- Deno remote import resolved at runtime
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 // @ts-expect-error -- Deno remote import resolved at runtime
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.106.2";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -40,8 +40,7 @@ const getSecretKey = () =>
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -96,6 +95,19 @@ const handle = async (req: Request): Promise<Response> => {
     return json({ error: "Unauthorized", detail: userError?.message }, 401);
   }
 
+  const serviceKey = getSecretKey();
+  if (!serviceKey) return json({ error: "Supabase secret key not configured" }, 500);
+  const adminClient = createClient(supabaseUrl, serviceKey);
+  const { data: accessProfile, error: accessError } = await adminClient
+    .from("access_profiles")
+    .select("role")
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+  if (accessError) return json({ error: "Could not verify access role" }, 500);
+  if (accessProfile?.role !== "owner") {
+    return json({ error: "Demo users cannot send real messages" }, 403);
+  }
+
   // 2. Parse body
   let body: { telefone?: string; message?: string; bsuid?: string };
   try {
@@ -119,17 +131,14 @@ const handle = async (req: Request): Promise<Response> => {
     }
     // Normaliza pro formato canônico BR (sem 55, sem 9 do celular, 10 dígitos)
     const local = toDigits.startsWith("55") ? toDigits.slice(2) : toDigits;
-    canonicalPhone = local.length === 11 && local[2] === "9"
-      ? local.slice(0, 2) + local.slice(3)
-      : local;
+    canonicalPhone =
+      local.length === 11 && local[2] === "9" ? local.slice(0, 2) + local.slice(3) : local;
   }
 
   // 3. Checagem de opt-out (LGPD Art. 18 — direito de oposição).
   // Busca todas as linhas e compara em forma canônica de telefone OU match
   // direto de bsuid — garante bloqueio mesmo quando só temos um dos identificadores.
-  const serviceKey = getSecretKey();
   if (serviceKey) {
-    const adminClient = createClient(supabaseUrl, serviceKey);
     const { data: optOutRows } = await adminClient
       .from("phone_opt_outs")
       .select("telefone, bsuid, opted_out_at");
@@ -139,9 +148,8 @@ const handle = async (req: Request): Promise<Response> => {
         if (!canonicalPhone || !r.telefone) return false;
         const d = r.telefone.replace(/\D/g, "");
         const local = d.startsWith("55") ? d.slice(2) : d;
-        const canonical = local.length === 11 && local[2] === "9"
-          ? local.slice(0, 2) + local.slice(3)
-          : local;
+        const canonical =
+          local.length === 11 && local[2] === "9" ? local.slice(0, 2) + local.slice(3) : local;
         return canonical === canonicalPhone;
       },
     );
@@ -149,8 +157,7 @@ const handle = async (req: Request): Promise<Response> => {
       return json(
         {
           error: "Contato em opt-out",
-          message:
-            "Esse contato solicitou descadastramento e não pode receber mensagens.",
+          message: "Esse contato solicitou descadastramento e não pode receber mensagens.",
           opted_out_at: match.opted_out_at,
         },
         403,
@@ -163,10 +170,7 @@ const handle = async (req: Request): Promise<Response> => {
   const waPhoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
   if (!waToken || !waPhoneId) {
     console.error("[send-whatsapp] WHATSAPP_TOKEN/WHATSAPP_PHONE_NUMBER_ID missing");
-    return json(
-      { error: "WHATSAPP_TOKEN ou WHATSAPP_PHONE_NUMBER_ID não configurados" },
-      500,
-    );
+    return json({ error: "WHATSAPP_TOKEN ou WHATSAPP_PHONE_NUMBER_ID não configurados" }, 500);
   }
 
   // Envia com `to` (telefone) quando disponível, ou `recipient` (BSUID) caso
@@ -184,17 +188,14 @@ const handle = async (req: Request): Promise<Response> => {
     waPayload.recipient = bsuid;
   }
 
-  const waResponse = await fetch(
-    `https://graph.facebook.com/v23.0/${waPhoneId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${waToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(waPayload),
+  const waResponse = await fetch(`https://graph.facebook.com/v23.0/${waPhoneId}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${waToken}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify(waPayload),
+  });
   const waData = await waResponse.json().catch(() => ({}));
   if (!waResponse.ok) {
     console.error("[send-whatsapp] WA API error:", waResponse.status, JSON.stringify(waData));
@@ -215,17 +216,14 @@ const handle = async (req: Request): Promise<Response> => {
   // telefone↔bsuid em envio_em_massa quando a Meta nos devolveu o BSUID.
   const persistedBsuid = returnedBsuid ?? (bsuid || null);
   if (serviceKey) {
-    const adminClient = createClient(supabaseUrl, serviceKey);
-    const { error: insertError } = await adminClient
-      .from("webhook_messages")
-      .insert({
-        message_id: wamid ?? `manual-${crypto.randomUUID()}`,
-        message_status: "sent",
-        message_text: message,
-        who_sent: "manual_response",
-        telefone: telefone || null,
-        bsuid: persistedBsuid,
-      });
+    const { error: insertError } = await adminClient.from("webhook_messages").insert({
+      message_id: wamid ?? `manual-${crypto.randomUUID()}`,
+      message_status: "sent",
+      message_text: message,
+      who_sent: "manual_response",
+      telefone: telefone || null,
+      bsuid: persistedBsuid,
+    });
     if (insertError) {
       console.error("[send-whatsapp] insert webhook_messages:", insertError.message);
       // Mensagem foi enviada com sucesso ao WA, só não conseguimos gravar.

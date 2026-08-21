@@ -30,15 +30,29 @@ GRANT ALL ON public.dados_cliente TO service_role;
 ALTER TABLE public.webhook_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dados_cliente ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated read messages" ON public.webhook_messages;
+DROP POLICY IF EXISTS "Authenticated insert messages" ON public.webhook_messages;
+DROP POLICY IF EXISTS "Authenticated update messages" ON public.webhook_messages;
 CREATE POLICY "Authenticated read messages" ON public.webhook_messages FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert messages" ON public.webhook_messages FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update messages" ON public.webhook_messages FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated read clientes" ON public.dados_cliente;
+DROP POLICY IF EXISTS "Authenticated insert clientes" ON public.dados_cliente;
+DROP POLICY IF EXISTS "Authenticated update clientes" ON public.dados_cliente;
 CREATE POLICY "Authenticated read clientes" ON public.dados_cliente FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert clientes" ON public.dados_cliente FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update clientes" ON public.dados_cliente FOR UPDATE TO authenticated USING (true);
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.webhook_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.dados_cliente;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'webhook_messages') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.webhook_messages;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'dados_cliente') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.dados_cliente;
+  END IF;
+END
+$$;
 ALTER TABLE public.webhook_messages REPLICA IDENTITY FULL;
 ALTER TABLE public.dados_cliente REPLICA IDENTITY FULL;

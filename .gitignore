@@ -33,3 +33,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Supabase CLI local link/cache metadata
+supabase/.temp/

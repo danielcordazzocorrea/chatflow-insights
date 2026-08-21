@@ -5,6 +5,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Users, MessageSquare, CheckCircle2, TrendingUp } from "lucide-react";
 import IaGlobalCard from "@/components/IaGlobalCard";
 import ProgressMetricCard, { type MetricSeries } from "@/components/ui/progress-metric-card";
+import { useIsDemo } from "@/contexts/AccessContext";
+import { demoDateRows } from "@/lib/demo-data";
 
 type DateRow = { created_at: string };
 type Summary = { clientes: number; mensagens: number; respondidos: number };
@@ -42,6 +44,7 @@ async function fetchMessageDates(since: string) {
 }
 
 export default function Dashboard() {
+  const isDemo = useIsDemo();
   const [clientes, setClientes] = useState<DateRow[]>([]);
   const [messages, setMessages] = useState<DateRow[]>([]);
   const [summary, setSummary] = useState<Summary>({ clientes: 0, mensagens: 0, respondidos: 0 });
@@ -52,6 +55,13 @@ export default function Dashboard() {
     document.title = "Dashboard — WhatsApp Automation";
     const load = async () => {
       setLoadError(null);
+      if (isDemo) {
+        setSummary({ clientes: 128, mensagens: 1847, respondidos: 93 });
+        setClientes(demoDateRows(128));
+        setMessages(demoDateRows(420));
+        setLoading(false);
+        return;
+      }
       try {
         const windowStart = new Date();
         windowStart.setDate(windowStart.getDate() - 29);
@@ -89,6 +99,7 @@ export default function Dashboard() {
     };
     load();
 
+    if (isDemo) return;
     const ch = supabase
       .channel("dashboard-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "dados_cliente" }, load)
@@ -97,7 +108,7 @@ export default function Dashboard() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [isDemo]);
 
   const stats = useMemo(() => {
     const total = summary.clientes;
