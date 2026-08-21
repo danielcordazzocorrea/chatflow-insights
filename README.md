@@ -66,6 +66,10 @@ supabase/
 N8N/                    workflow de automação do WhatsApp
 ```
 
+O workflow versionado é um template sanitizado: IDs de webhook, referências de
+credenciais e o identificador do telefone foram removidos. Após importar o JSON,
+reconecte manualmente cada credencial no n8n e configure o Phone Number ID.
+
 ## Configuração local
 
 Requisitos:
@@ -125,6 +129,9 @@ npx supabase secrets set META_APP_ID=...
 npx supabase secrets set N8N_CAMPAIGN_WEBHOOK_URL=...
 npx supabase secrets set N8N_CAMPAIGN_WEBHOOK_SECRET=...
 ```
+
+`N8N_CAMPAIGN_WEBHOOK_SECRET` é obrigatório. O endpoint receptor no n8n deve
+comparar `X-Webhook-Secret` antes de consultar contatos ou iniciar disparos.
 
 Veja [supabase/functions/README.md](./supabase/functions/README.md) para os contratos dos endpoints e instruções de implantação.
 

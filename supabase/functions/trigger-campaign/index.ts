@@ -52,6 +52,8 @@ serve(
     const webhookUrl = Deno.env.get("N8N_CAMPAIGN_WEBHOOK_URL");
     const webhookSecret = Deno.env.get("N8N_CAMPAIGN_WEBHOOK_SECRET");
     if (!webhookUrl) throw new HttpError(500, "N8N_CAMPAIGN_WEBHOOK_URL is missing");
+    // SEC-005: campaign dispatch must never call an unauthenticated webhook.
+    if (!webhookSecret) throw new HttpError(500, "N8N_CAMPAIGN_WEBHOOK_SECRET is missing");
 
     const eventId = crypto.randomUUID();
     const payload = {
@@ -70,7 +72,7 @@ serve(
       headers: {
         "Content-Type": "application/json",
         "Idempotency-Key": eventId,
-        ...(webhookSecret ? { "X-Webhook-Secret": webhookSecret } : {}),
+        "X-Webhook-Secret": webhookSecret,
       },
       body: JSON.stringify(payload),
     });

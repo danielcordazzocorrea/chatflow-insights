@@ -70,7 +70,8 @@ envia ao webhook do n8n a campanha, a etapa e o template selecionado.
 `template_id` é opcional; sem ele, usa o último template salvo. O n8n deve
 consultar `envio_em_massa` por `campanha_id` e `etapa`, realizar os disparos e
 atualizar o banco. O webhook contém uma `Idempotency-Key` única para evitar
-processamento duplicado.
+processamento duplicado. O receptor também deve validar obrigatoriamente o header
+`X-Webhook-Secret` antes de processar o payload.
 
 ## Secrets
 
@@ -83,6 +84,7 @@ supabase secrets set N8N_CAMPAIGN_WEBHOOK_SECRET=...
 ```
 
 `WHATSAPP_API_VERSION` é opcional e usa `v23.0` por padrão.
+`N8N_CAMPAIGN_WEBHOOK_SECRET` é obrigatório para disparar campanhas.
 
 ## Deploy
 

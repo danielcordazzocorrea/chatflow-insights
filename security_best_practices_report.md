@@ -55,14 +55,13 @@ Nenhum achado crítico confirmado.
 - Correção proposta: configurar uma allowlist de origens de produção e desenvolvimento via secret, retornando o origin somente quando autorizado.
 - Observação: não foi alterado nesta entrega porque a URL definitiva de produção não estava documentada, e um bloqueio incorreto interromperia a aplicação.
 
-### SEC-005 — Secret do webhook n8n é opcional
+### SEC-005 — Secret do webhook n8n era opcional
 
-- Estado: aberto.
+- Estado: corrigido.
 - Local: `supabase/functions/trigger-campaign/index.ts`, linhas 52–74.
-- Evidência: a função envia `X-Webhook-Secret` apenas quando `N8N_CAMPAIGN_WEBHOOK_SECRET` existe.
+- Evidência original: a função enviava `X-Webhook-Secret` apenas quando `N8N_CAMPAIGN_WEBHOOK_SECRET` existia.
 - Exploração: se o webhook receptor for público e não exigir autenticação própria, terceiros que descobrirem sua URL podem tentar acionar campanhas diretamente.
-- Correção proposta: tornar o secret obrigatório na Edge Function e validar o mesmo secret no workflow n8n antes de qualquer consulta ou disparo.
-- Mitigação: confirmar que o secret já está configurado nos dois lados antes de ativar campanhas reais.
+- Correção implementada: a Edge Function agora falha de forma segura quando o secret não existe e sempre envia `X-Webhook-Secret`. O workflow receptor deve validar o mesmo valor antes de qualquer consulta ou disparo.
 
 ### SEC-006 — Headers de segurança ausentes
 
@@ -127,3 +126,5 @@ Teste ainda recomendado após criar a conta demonstrativa:
 - Atualizado `package-lock.json` para remover todos os advisories High e Medium conhecidos.
 - Corrigido o diretório de `send-whatsapp` para `supabase/functions/send-whatsapp`.
 - Confirmado que `.env` e `supabase/.temp` não são versionados.
+- Sanitizado o template n8n, removendo IDs de webhook, referências internas de credenciais e o Phone Number ID.
+- Tornado obrigatório o secret compartilhado usado no disparo de campanhas para o n8n.
