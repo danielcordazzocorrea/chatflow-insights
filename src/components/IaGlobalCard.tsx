@@ -14,14 +14,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useIsDemo } from "@/contexts/AccessContext";
 
 export default function IaGlobalCard() {
+  const isDemo = useIsDemo();
   const [id, setId] = useState<string | null>(null);
   const [ativa, setAtiva] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
 
   useEffect(() => {
+    if (isDemo) {
+      setAtiva(true);
+      return;
+    }
     const load = async () => {
       const { data } = await supabase
         .from("configuracoes_ia")
@@ -45,9 +51,14 @@ export default function IaGlobalCard() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [isDemo]);
 
   const persist = async (value: boolean) => {
+    if (isDemo) {
+      setAtiva(value);
+      toast.info("Alteração simulada no ambiente demonstrativo");
+      return;
+    }
     setSaving(true);
     const prev = ativa;
     setAtiva(value);

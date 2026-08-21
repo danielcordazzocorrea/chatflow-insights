@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import AuthPage from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
+import Campaigns from "@/pages/Campaigns";
 import ProtectedLayout from "@/components/ProtectedLayout";
 
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/campanhas" element={<Campaigns />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

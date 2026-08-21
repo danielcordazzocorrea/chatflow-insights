@@ -12,6 +12,9 @@ GRANT ALL ON public.configuracoes_ia TO service_role;
 
 ALTER TABLE public.configuracoes_ia ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated read configuracoes_ia" ON public.configuracoes_ia;
+DROP POLICY IF EXISTS "Authenticated insert configuracoes_ia" ON public.configuracoes_ia;
+DROP POLICY IF EXISTS "Authenticated update configuracoes_ia" ON public.configuracoes_ia;
 CREATE POLICY "Authenticated read configuracoes_ia" ON public.configuracoes_ia FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Authenticated insert configuracoes_ia" ON public.configuracoes_ia FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update configuracoes_ia" ON public.configuracoes_ia FOR UPDATE TO authenticated USING (true);

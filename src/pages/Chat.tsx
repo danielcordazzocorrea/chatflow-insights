@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Search, Send, Phone, CheckCheck, Bot } from "lucide-react";
+import { ArrowLeft, Search, Send, Phone, CheckCheck, Bot, Clock3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useIsDemo } from "@/contexts/AccessContext";
+import { demoClientes, demoMessages } from "@/lib/demo-data";
 
 type Cliente = {
   id: string;
@@ -26,17 +28,26 @@ type Msg = {
   created_at: string;
 };
 
+const META_SERVICE_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 export default function ChatPage() {
+  const isDemo = useIsDemo();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [activePhone, setActivePhone] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.title = "Chat — WhatsApp Automation";
+    if (isDemo) {
+      setClientes(demoClientes);
+      setMessages(demoMessages);
+      return;
+    }
     const load = async () => {
       const [c, m] = await Promise.all([
         supabase.from("dados_cliente").select("*").order("created_at", { ascending: false }),
@@ -62,7 +73,7 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [isDemo]);
 
   const filteredClientes = useMemo(() => {
     const q = search.toLowerCase();
@@ -90,9 +101,47 @@ export default function ChatPage() {
     [clientes, activePhone],
   );
 
+  const lastClientMessage = useMemo(
+    () =>
+      activeMessages.reduce<Msg | null>((latest, message) => {
+        if (message.who_sent !== "client") return latest;
+        if (
+          !latest ||
+          new Date(message.created_at).getTime() > new Date(latest.created_at).getTime()
+        ) {
+          return message;
+        }
+        return latest;
+      }, null),
+    [activeMessages],
+  );
+
+  useEffect(() => {
+    setCurrentTime(Date.now());
+    if (!lastClientMessage) return;
+
+    const expiresAt = new Date(lastClientMessage.created_at).getTime() + META_SERVICE_WINDOW_MS;
+    const delay = expiresAt - Date.now();
+    if (delay <= 0) return;
+
+    const timeout = window.setTimeout(() => setCurrentTime(Date.now()), delay);
+    return () => window.clearTimeout(timeout);
+  }, [lastClientMessage]);
+
+  const isMetaWindowOpen = lastClientMessage
+    ? currentTime - new Date(lastClientMessage.created_at).getTime() < META_SERVICE_WINDOW_MS
+    : false;
+
   const toggleIa = async (c: Cliente, e: React.MouseEvent) => {
     e.stopPropagation();
     const next = !c.ia_ativa;
+    if (isDemo) {
+      setClientes((current) =>
+        current.map((cliente) => (cliente.id === c.id ? { ...cliente, ia_ativa: next } : cliente)),
+      );
+      toast.info("Alteração simulada no ambiente demonstrativo");
+      return;
+    }
     const { error } = await supabase
       .from("dados_cliente")
       .update({ ia_ativa: next })
@@ -114,6 +163,13 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!input.trim() || !activePhone) return;
+    if (!isMetaWindowOpen) {
+      toast.error("Janela de 24 horas encerrada", {
+        description:
+          "Aguarde o cliente enviar uma nova mensagem ou use um template aprovado pela Meta.",
+      });
+      return;
+    }
     setSending(true);
     const text = input.trim();
     setInput("");
@@ -132,6 +188,19 @@ export default function ChatPage() {
         created_at: new Date().toISOString(),
       },
     ]);
+
+    if (isDemo) {
+      window.setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === localId ? { ...message, message_status: "delivered" } : message,
+          ),
+        );
+        setSending(false);
+        toast.info("Mensagem simulada; nenhum envio real foi realizado");
+      }, 500);
+      return;
+    }
 
     // Chama a edge function send-whatsapp — ela envia pelo WhatsApp Cloud API
     // e grava em webhook_messages (o canal realtime traz a versão oficial depois).
@@ -343,6 +412,15 @@ export default function ChatPage() {
                 </motion.div>
               )}
               <div className="p-4 sm:p-5 border-t bg-card">
+                {!isMetaWindowOpen && (
+                  <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-300">
+                    <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p>
+                      Janela de 24 horas encerrada. Aguarde uma nova mensagem do cliente ou use um
+                      template aprovado pela Meta.
+                    </p>
+                  </div>
+                )}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -353,14 +431,18 @@ export default function ChatPage() {
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Escreva uma mensagem..."
-                    disabled={sending}
+                    placeholder={
+                      isMetaWindowOpen
+                        ? "Escreva uma mensagem..."
+                        : "Envio bloqueado fora da janela de 24 horas"
+                    }
+                    disabled={sending || !isMetaWindowOpen}
                     autoFocus
                     className="flex-1 bg-background border-border placeholder:text-muted-foreground focus-visible:ring-primary"
                   />
                   <button
                     type="submit"
-                    disabled={sending || !input.trim()}
+                    disabled={sending || !input.trim() || !isMetaWindowOpen}
                     aria-label="Enviar mensagem"
                     className="rounded-xl bg-primary p-2.5 text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >

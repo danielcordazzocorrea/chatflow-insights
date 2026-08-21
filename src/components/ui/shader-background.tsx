@@ -111,11 +111,7 @@ const ShaderBackground = () => {
   `;
 
   // Helper function to compile shader
-  const loadShader = (
-    gl: WebGLRenderingContext,
-    type: number,
-    source: string,
-  ) => {
+  const loadShader = (gl: WebGLRenderingContext, type: number, source: string) => {
     const shader = gl.createShader(type);
     if (!shader) return null;
     gl.shaderSource(shader, source);
@@ -131,11 +127,7 @@ const ShaderBackground = () => {
   };
 
   // Initialize shader program
-  const initShaderProgram = (
-    gl: WebGLRenderingContext,
-    vsSource: string,
-    fsSource: string,
-  ) => {
+  const initShaderProgram = (gl: WebGLRenderingContext, vsSource: string, fsSource: string) => {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
     if (!vertexShader || !fragmentShader) return null;
@@ -147,10 +139,7 @@ const ShaderBackground = () => {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      console.error(
-        "Shader program link error: ",
-        gl.getProgramInfoLog(shaderProgram),
-      );
+      console.error("Shader program link error: ", gl.getProgramInfoLog(shaderProgram));
       return null;
     }
 
@@ -173,11 +162,7 @@ const ShaderBackground = () => {
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     const positions = [-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0];
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array(positions),
-      gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
     const programInfo = {
       program: shaderProgram,
@@ -208,22 +193,11 @@ const ShaderBackground = () => {
 
       gl.useProgram(programInfo.program);
 
-      gl.uniform2f(
-        programInfo.uniformLocations.resolution,
-        canvas.width,
-        canvas.height,
-      );
+      gl.uniform2f(programInfo.uniformLocations.resolution, canvas.width, canvas.height);
       gl.uniform1f(programInfo.uniformLocations.time, currentTime);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexPosition,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0,
-      );
+      gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -237,12 +211,7 @@ const ShaderBackground = () => {
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 w-full h-full -z-10"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full -z-10" />;
 };
 
 export default ShaderBackground;
