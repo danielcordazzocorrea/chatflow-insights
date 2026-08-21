@@ -314,8 +314,8 @@ const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
 };
 
 export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageProps) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("user@example.com");
+  const [password, setPassword] = useState("password");
   const [step, setStep] = useState<"credentials" | "success">("credentials");
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
@@ -427,6 +427,16 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                       </p>
                     </div>
 
+                    <div className="rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm">
+                      <p className="font-semibold text-foreground">Acesso demonstrativo</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Login: <span className="font-medium text-foreground">user@example.com</span>
+                      </p>
+                      <p className="text-muted-foreground">
+                        Senha: <span className="font-medium text-foreground">password</span>
+                      </p>
+                    </div>
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium text-foreground/80">
@@ -436,6 +446,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                           <input
                             id="email"
                             type="email"
+                            autoComplete="username"
                             placeholder="operador@empresa.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -456,6 +467,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                           <input
                             id="password"
                             type="password"
+                            autoComplete="current-password"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -486,7 +498,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                     </form>
 
                     <p className="text-xs text-muted-foreground text-center lg:text-left pt-4">
-                      Acesso restrito. Credenciais gerenciadas pelo administrador.
+                      A conta demonstrativa usa somente dados fictícios e não realiza ações reais.
                     </p>
                   </motion.div>
                 ) : (
