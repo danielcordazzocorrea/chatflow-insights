@@ -48,12 +48,11 @@ Nenhum achado crítico confirmado.
 
 ### SEC-004 — CORS permissivo nas Edge Functions
 
-- Estado: aberto, risco reduzido pela autenticação bearer.
+- Estado: corrigido.
 - Local: `supabase/functions/_shared/http.ts`, linhas 4–8; `supabase/functions/send-whatsapp/index.ts`, linhas 41–45.
 - Evidência: `Access-Control-Allow-Origin: *`.
 - Exploração: CORS não concede uma sessão por si só, mas permite que qualquer origem tente chamar os endpoints. Se um token for exposto a código malicioso, a política não cria uma barreira adicional.
-- Correção proposta: configurar uma allowlist de origens de produção e desenvolvimento via secret, retornando o origin somente quando autorizado.
-- Observação: não foi alterado nesta entrega porque a URL definitiva de produção não estava documentada, e um bloqueio incorreto interromperia a aplicação.
+- Correção implementada: as funções aceitam chamadas de navegador somente de `https://chatflow-insights.vercel.app` e dos endereços locais de desenvolvimento na porta 8080. Chamadas servidor-servidor sem `Origin`, como n8n, continuam permitidas e ainda passam pela autenticação própria.
 
 ### SEC-005 — Secret do webhook n8n era opcional
 
@@ -128,3 +127,4 @@ Teste ainda recomendado após criar a conta demonstrativa:
 - Confirmado que `.env` e `supabase/.temp` não são versionados.
 - Sanitizado o template n8n, removendo IDs de webhook, referências internas de credenciais e o Phone Number ID.
 - Tornado obrigatório o secret compartilhado usado no disparo de campanhas para o n8n.
+- Restringido o CORS das Edge Functions ao domínio oficial e aos endereços locais de desenvolvimento.

@@ -38,32 +38,54 @@ const getPublishableKey = () =>
 const getSecretKey = () =>
   firstStringFromDict("SUPABASE_SECRET_KEYS") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+const allowedOrigins = new Set([
+  "https://chatflow-insights.vercel.app",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+]);
+
+const isAllowedOrigin = (req: Request) => {
+  const origin = req.headers.get("Origin");
+  return !origin || allowedOrigins.has(origin);
+};
+
+const withCors = (req: Request, response: Response) => {
+  const headers = new Headers(response.headers);
+  const origin = req.headers.get("Origin");
+  if (origin && allowedOrigins.has(origin)) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Vary", "Origin");
+  }
+  headers.set("Access-Control-Allow-Headers", "authorization, x-client-info, apikey, content-type");
+  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 };
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
   });
 
 serve(async (req: Request) => {
+  if (!isAllowedOrigin(req)) return json({ error: "Origin not allowed" }, 403);
   try {
-    return await handle(req);
+    return withCors(req, await handle(req));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;
     console.error("[send-whatsapp] uncaught:", msg, stack);
-    return json({ error: "Internal error", detail: msg }, 500);
+    return withCors(req, json({ error: "Internal error", detail: msg }, 500));
   }
 });
 
 const handle = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null);
   }
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);

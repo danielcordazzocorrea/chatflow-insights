@@ -1,16 +1,38 @@
 // Shared helpers for authenticated campaign Edge Functions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.106.2";
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+const allowedOrigins = new Set([
+  "https://chatflow-insights.vercel.app",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+]);
+
+const isAllowedOrigin = (req: Request) => {
+  const origin = req.headers.get("Origin");
+  // Server-to-server clients such as n8n do not send a browser Origin header.
+  return !origin || allowedOrigins.has(origin);
+};
+
+const withCors = (req: Request, response: Response) => {
+  const headers = new Headers(response.headers);
+  const origin = req.headers.get("Origin");
+  if (origin && allowedOrigins.has(origin)) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Vary", "Origin");
+  }
+  headers.set("Access-Control-Allow-Headers", "authorization, x-client-info, apikey, content-type");
+  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 };
 
 export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
   });
 
 const firstStringFromDict = (name: string): string | undefined => {
@@ -72,19 +94,23 @@ export class HttpError extends Error {
 }
 
 export const endpoint = (handler: (req: Request) => Promise<Response>) => async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (!isAllowedOrigin(req)) return json({ error: "Origin not allowed" }, 403);
+  if (req.method === "OPTIONS") return withCors(req, new Response(null));
+  if (req.method !== "POST") return withCors(req, json({ error: "Method not allowed" }, 405));
   try {
-    return await handler(req);
+    return withCors(req, await handler(req));
   } catch (error) {
     if (error instanceof HttpError) {
-      return json(
-        { error: error.message, ...(error.detail ? { detail: error.detail } : {}) },
-        error.status,
+      return withCors(
+        req,
+        json(
+          { error: error.message, ...(error.detail ? { detail: error.detail } : {}) },
+          error.status,
+        ),
       );
     }
     console.error(error);
-    return json({ error: "Internal error" }, 500);
+    return withCors(req, json({ error: "Internal error" }, 500));
   }
 };
 

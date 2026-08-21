@@ -33,6 +33,7 @@ Controles adicionais incluídos:
 - secrets permanecem exclusivamente nas variáveis das Edge Functions;
 - o frontend utiliza somente a chave pública do Supabase;
 - headers de segurança e Content Security Policy são aplicados pela Vercel;
+- Edge Functions aceitam chamadas de navegador somente do domínio oficial e do ambiente local;
 - endpoints de campanha validam autenticação, propriedade e entradas;
 - `.env` e metadados locais do Supabase não são versionados.
 
