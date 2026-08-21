@@ -393,7 +393,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
       {/* Content Layer */}
       <div className="relative z-10 flex flex-col flex-1">
         {/* Top header */}
-        <header className="w-full p-6 lg:p-10 flex items-center gap-3">
+        <header className="w-full px-6 py-4 lg:px-10 lg:py-6 flex items-center gap-3">
           <BrandChatIcon className="h-10 w-10" />
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tight text-foreground">
@@ -406,7 +406,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
         {/* Main content */}
         <div className="flex flex-1 flex-col lg:flex-row">
           {/* Form side */}
-          <div className="flex-1 flex flex-col justify-center items-center px-6 pb-10">
+          <div className="flex-1 flex flex-col justify-center items-center px-6 pb-6">
             <div className="w-full max-w-sm">
               <AnimatePresence mode="wait">
                 {step === "credentials" ? (
@@ -416,7 +416,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="space-y-8"
+                    className="space-y-5"
                   >
                     <div className="space-y-2 text-center lg:text-left">
                       <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-foreground">
@@ -427,7 +427,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm">
+                    <div className="rounded-2xl border border-primary/25 bg-primary/10 px-4 py-2.5 text-sm">
                       <p className="font-semibold text-foreground">Acesso demonstrativo</p>
                       <p className="mt-1 text-muted-foreground">
                         Login: <span className="font-medium text-foreground">user@example.com</span>
@@ -497,7 +497,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
                       </div>
                     </form>
 
-                    <p className="text-xs text-muted-foreground text-center lg:text-left pt-4">
+                    <p className="text-xs text-muted-foreground text-center lg:text-left pt-1">
                       A conta demonstrativa usa somente dados fictícios e não realiza ações reais.
                     </p>
                   </motion.div>
