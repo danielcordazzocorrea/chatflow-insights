@@ -5,6 +5,8 @@ import AuthPage from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 import Campaigns from "@/pages/Campaigns";
+import CampaignDetails from "@/pages/CampaignDetails";
+import Templates from "@/pages/Templates";
 import ProtectedLayout from "@/components/ProtectedLayout";
 
 const queryClient = new QueryClient();
@@ -20,6 +22,8 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/campanhas" element={<Campaigns />} />
+            <Route path="/campanhas/templates" element={<Templates />} />
+            <Route path="/campanhas/:campaignId" element={<CampaignDetails />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

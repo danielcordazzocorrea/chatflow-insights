@@ -72,6 +72,45 @@ serve(
       status: meta.status ?? "PENDING",
       submitted_at: submittedAt,
     };
+    const { data: libraryTemplate, error: libraryError } = await admin
+      .from("templates_meta")
+      .upsert(
+        {
+          created_by: user.id,
+          name,
+          language,
+          category,
+          status: meta.status ?? "PENDING",
+          meta_id: meta.id ? String(meta.id) : null,
+          payload: savedTemplate,
+          updated_at: submittedAt,
+        },
+        { onConflict: "created_by,name,language" },
+      )
+      .select()
+      .single();
+    const libraryUnavailable = libraryError?.code === "42P01" || libraryError?.code === "PGRST205";
+    if (libraryError && !libraryUnavailable) {
+      throw new HttpError(
+        502,
+        "Template created at Meta but could not be saved to library",
+        libraryError.message,
+      );
+    }
+    if (libraryTemplate) {
+      const { error: linkError } = await admin
+        .from("campanha_templates")
+        .upsert(
+          { campanha_id: campaignId, template_id: libraryTemplate.id },
+          { onConflict: "campanha_id,template_id" },
+        );
+      if (linkError)
+        throw new HttpError(
+          502,
+          "Template saved but could not be linked to campaign",
+          linkError.message,
+        );
+    }
     const previousTemplates = Array.isArray(campaign.templates_meta)
       ? campaign.templates_meta
       : campaign.templates_meta
@@ -105,6 +144,14 @@ serve(
         502,
       );
     }
-    return json({ template: savedTemplate, meta, campaign: updatedCampaign }, 201);
+    return json(
+      {
+        template: savedTemplate,
+        library_template: libraryTemplate,
+        meta,
+        campaign: updatedCampaign,
+      },
+      201,
+    );
   }),
 );

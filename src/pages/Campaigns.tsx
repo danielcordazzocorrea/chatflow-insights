@@ -1,6 +1,8 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
+  ChevronRight,
   Clock3,
   FileText,
   Link2,
@@ -52,6 +54,13 @@ type Campaign = Tables<"campanhas">;
 type Contact = Tables<"envio_em_massa">;
 type Message = Pick<Tables<"webhook_messages">, "message_status">;
 type TemplateRecord = Record<string, Json | undefined>;
+type CampaignPercentages = {
+  contacts: number;
+  sent: number;
+  interaction: number;
+  delivered: number;
+  read: number;
+};
 
 const statusLabels: Record<Campaign["status"], string> = {
   rascunho: "Rascunho",
@@ -139,6 +148,12 @@ const previewMessages: Message[] = Array.from({ length: 36 }, (_, index) => ({
   message_status: index < 18 ? "read" : index < 29 ? "delivered" : index < 34 ? "sent" : "failed",
 }));
 
+const previewPercentages = new Map<number, CampaignPercentages>([
+  [1, { contacts: 48, sent: 75, interaction: 27, delivered: 81, read: 50 }],
+  [2, { contacts: 126, sent: 38, interaction: 12, delivered: 92, read: 64 }],
+  [3, { contacts: 84, sent: 100, interaction: 61, delivered: 96, read: 78 }],
+]);
+
 const invoke = async <T,>(name: string, body: Record<string, unknown>) => {
   const { data, error } = await supabase.functions.invoke<T>(name, { body });
   if (error) throw error;
@@ -159,12 +174,16 @@ function StatusPill({ status }: { status: Campaign["status"] }) {
 }
 
 export default function Campaigns() {
+  const navigate = useNavigate();
   const isDemo = useIsDemo();
   const searchParams = new URLSearchParams(window.location.search);
   const visualPreview = isDemo || (import.meta.env.DEV && searchParams.has("visual-preview"));
   const [campaigns, setCampaigns] = useState<Campaign[]>(visualPreview ? previewCampaigns : []);
   const [contacts, setContacts] = useState<Contact[]>(visualPreview ? previewContacts : []);
   const [messages, setMessages] = useState<Message[]>(visualPreview ? previewMessages : []);
+  const [campaignPercentages, setCampaignPercentages] = useState(
+    visualPreview ? previewPercentages : new Map<number, CampaignPercentages>(),
+  );
   const [selectedId, setSelectedId] = useState<number | null>(visualPreview ? 1 : null);
   const [loading, setLoading] = useState(!visualPreview);
   const [busy, setBusy] = useState<string | null>(null);
@@ -186,15 +205,53 @@ export default function Campaigns() {
   const loadCampaigns = useCallback(async () => {
     if (visualPreview) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("campanhas")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [campaignResult, contactResult, messageResult] = await Promise.all([
+      supabase.from("campanhas").select("*").order("created_at", { ascending: false }),
+      supabase.from("envio_em_massa").select("campanha_id,etapa"),
+      supabase.from("webhook_messages").select("campanha_id,message_status"),
+    ]);
+    const { data, error } = campaignResult;
     if (error) {
       toast.error("Não foi possível carregar as campanhas", { description: error.message });
     } else {
       setCampaigns(data ?? []);
       setSelectedId((current) => current ?? data?.[0]?.id ?? null);
+
+      const percentages = new Map<number, CampaignPercentages>();
+      (data ?? []).forEach((campaign) => {
+        const campaignContacts = (contactResult.data ?? []).filter(
+          (contact) => contact.campanha_id === campaign.id,
+        );
+        const campaignMessages = (messageResult.data ?? []).filter(
+          (message) => message.campanha_id === campaign.id,
+        );
+        const contactTotal = campaignContacts.length;
+        const messageTotal = campaignMessages.length;
+        const percentage = (value: number, total: number) =>
+          total ? Math.round((value / total) * 100) : 0;
+        percentages.set(campaign.id, {
+          contacts: contactTotal,
+          sent: percentage(
+            campaignContacts.filter((contact) => Number(contact.etapa ?? 0) >= 1).length,
+            contactTotal,
+          ),
+          interaction: percentage(
+            campaignContacts.filter((contact) => Number(contact.etapa ?? 0) >= 2).length,
+            contactTotal,
+          ),
+          delivered: percentage(
+            campaignMessages.filter((message) =>
+              ["delivered", "read"].includes(message.message_status ?? ""),
+            ).length,
+            messageTotal,
+          ),
+          read: percentage(
+            campaignMessages.filter((message) => message.message_status === "read").length,
+            messageTotal,
+          ),
+        });
+      });
+      setCampaignPercentages(percentages);
     }
     setLoading(false);
   }, [visualPreview]);
@@ -324,7 +381,7 @@ export default function Campaigns() {
       setNome("");
       setDescricao("");
       await loadCampaigns();
-      setSelectedId(data.campaign.id);
+      navigate(`/campanhas/${data.campaign.id}`);
     } catch (error) {
       toast.error("Erro ao criar campanha", {
         description: error instanceof Error ? error.message : String(error),
@@ -390,9 +447,9 @@ export default function Campaigns() {
   };
 
   return (
-    <div className="page-content h-[calc(100vh-4rem)] overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-thin">
+    <div className="page-content scrollbar-hidden h-[calc(100vh-4rem)] overflow-y-auto p-4 sm:p-5 lg:p-6">
       <div className="mx-auto max-w-[1600px]">
-        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-[-0.04em] lg:text-4xl">Campanhas</h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
@@ -414,199 +471,103 @@ export default function Campaigns() {
           </div>
         </header>
 
-        <section className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <nav className="mb-4 flex w-fit rounded-xl border bg-card/40 p-1 text-sm font-semibold">
+          <span className="rounded-lg bg-sky-400/15 px-4 py-2 text-sky-300">Campanhas</span>
+          <Link
+            to="/campanhas/templates"
+            className="rounded-lg px-4 py-2 text-muted-foreground transition hover:text-foreground"
+          >
+            Templates
+          </Link>
+        </nav>
+
+        <section className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
           {summaries.map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} className="control-card flex items-center gap-3 p-4">
-              <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", color)}>
+            <Card key={label} className="control-card flex items-center gap-3 p-3.5">
+              <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", color)}>
                 <Icon className="h-5 w-5" />
               </span>
               <div>
                 <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-2xl font-bold tabular-nums">{loading ? "—" : value}</p>
+                <p className="text-xl font-bold tabular-nums">{loading ? "—" : value}</p>
               </div>
             </Card>
           ))}
         </section>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(420px,.75fr)]">
-          <Card className="control-card overflow-hidden">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <div>
-                <h2 className="font-semibold">Todas as campanhas</h2>
-                <p className="text-xs text-muted-foreground">Selecione uma campanha para operar</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{campaigns.length} registros</span>
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold">Todas as campanhas</h2>
+              <p className="text-xs text-muted-foreground">
+                Selecione uma campanha para abrir o dashboard completo
+              </p>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Criada em</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaigns.map((campaign) => (
-                  <TableRow
-                    key={campaign.id}
-                    onClick={() => setSelectedId(campaign.id)}
-                    data-state={selectedId === campaign.id ? "selected" : undefined}
-                    className="cursor-pointer"
-                  >
-                    <TableCell>
-                      <div className="font-semibold">{campaign.nome}</div>
-                      <div className="max-w-56 truncate text-[11px] text-muted-foreground">
-                        {campaign.descricao || "Sem descrição"}
+            <span className="text-xs text-muted-foreground">{campaigns.length} campanhas</span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {campaigns.map((campaign) => {
+              const metrics = campaignPercentages.get(campaign.id) ?? {
+                contacts: 0,
+                sent: 0,
+                interaction: 0,
+                delivered: 0,
+                read: 0,
+              };
+              const interactionLabel = campaign.tipo === 1 ? "Cliques" : "Interações";
+
+              return (
+                <button
+                  key={campaign.id}
+                  type="button"
+                  onClick={() => navigate(`/campanhas/${campaign.id}`)}
+                  className="control-card group min-w-0 rounded-2xl p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-sky-400/50 hover:shadow-[0_18px_40px_-28px_rgba(56,189,248,.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <h3 className="truncate text-lg font-bold">{campaign.nome}</h3>
+                        <StatusPill status={campaign.status} />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1.5 text-xs">
+                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         {campaign.tipo === 1 ? (
                           <Link2 className="h-3.5 w-3.5 text-sky-300" />
                         ) : (
                           <MessageCircle className="h-3.5 w-3.5 text-sky-300" />
                         )}
-                        {campaign.tipo === 1 ? "Link" : "Interação"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <StatusPill status={campaign.status} />
-                    </TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground">
-                      {formatDate(campaign.created_at)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!loading && !campaigns.length && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-40 text-center text-muted-foreground">
-                      Crie sua primeira campanha para começar.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-
-          <Card className="control-card overflow-hidden">
-            {selected ? (
-              <>
-                <div className="border-b p-5">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-bold">{selected.nome}</h2>
-                    <StatusPill status={selected.status} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {selected.tipo === 1 ? "Campanha com link" : "Campanha de interação"} ·{" "}
-                    {contacts.length} contatos carregados
-                  </p>
-                </div>
-                <div className="space-y-4 p-5">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <Label className="mb-2 block text-xs">Etapa dos contatos</Label>
-                      <Select value={stage} onValueChange={setStage}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from(new Set([0, 1, 2, ...stageCounts.keys()]))
-                            .sort()
-                            .map((value) => (
-                              <SelectItem key={value} value={String(value)}>
-                                Etapa {value} · {stageCounts.get(value) ?? 0} contatos
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="mb-2 block text-xs">Template da Meta</Label>
-                      <Select
-                        value={templateId}
-                        onValueChange={setTemplateId}
-                        disabled={!templates.length}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Nenhum template" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {templates.map((template) => {
-                            const id = String(template.meta_id ?? template.name ?? "");
-                            return (
-                              <SelectItem key={id} value={id}>
-                                {String(template.name ?? "Template")} ·{" "}
-                                {String(template.status ?? "PENDING")}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-sky-400/[0.04] p-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Destinatários nesta etapa</p>
-                      <p className="text-2xl font-bold tabular-nums">
-                        {stageCounts.get(Number(stage)) ?? 0}
+                        {campaign.tipo === 1 ? "Campanha com link" : "Campanha de interação"}
+                        <span>·</span>
+                        <span>{metrics.contacts} contatos</span>
                       </p>
                     </div>
-                    <Button
-                      onClick={handleTrigger}
-                      disabled={
-                        isDemo ||
-                        busy === "trigger" ||
-                        !templateId ||
-                        !(stageCounts.get(Number(stage)) ?? 0)
-                      }
-                    >
-                      {busy === "trigger" ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="mr-2 h-4 w-4" />
-                      )}
-                      Disparar etapa
-                    </Button>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-sky-400/[0.06] text-sky-300 transition group-hover:bg-sky-400/15">
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setContactsOpen(true)}
-                      disabled={isDemo}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Importar contatos
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setTemplateOpen(true)}
-                      disabled={isDemo}
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Novo template
-                    </Button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
-                Selecione uma campanha.
-              </div>
-            )}
-          </Card>
-        </div>
 
-        {selected && (
-          <section className="mt-4 grid gap-4 lg:grid-cols-2">
-            <ReportCard
-              title="Interação dos contatos"
-              total={contacts.length}
-              data={interactionData}
-            />
-            <ReportCard title="Status das mensagens" total={messages.length} data={messageData} />
-          </section>
-        )}
+                  <div className="my-4 grid grid-cols-2 gap-x-5 gap-y-3">
+                    <CampaignPercentage label="Enviados" value={metrics.sent} />
+                    <CampaignPercentage label="Entregues" value={metrics.delivered} />
+                    <CampaignPercentage label={interactionLabel} value={metrics.interaction} />
+                    <CampaignPercentage label="Leitura" value={metrics.read} />
+                  </div>
+
+                  <div className="flex items-center justify-between border-t pt-3 text-[10px] text-muted-foreground">
+                    <span>{formatDate(campaign.created_at)}</span>
+                    <span className="font-bold text-sky-300">Abrir campanha</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {!loading && !campaigns.length && (
+            <Card className="control-card flex min-h-48 items-center justify-center text-sm text-muted-foreground">
+              Crie sua primeira campanha para começar.
+            </Card>
+          )}
+        </section>
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -701,6 +662,23 @@ export default function Campaigns() {
         onOpenChange={setTemplateOpen}
         onSaved={loadCampaigns}
       />
+    </div>
+  );
+}
+
+function CampaignPercentage({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1.5 flex items-end justify-between gap-2">
+        <span className="truncate text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-lg font-extrabold tabular-nums">{value}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-700/60">
+        <span
+          className="block h-full rounded-full bg-sky-400 transition-[width] duration-500"
+          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        />
+      </div>
     </div>
   );
 }

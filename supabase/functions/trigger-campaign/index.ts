@@ -22,11 +22,36 @@ serve(
     }
 
     const campaign = await requireOwnedCampaign(admin, campaignId, user.id);
-    const templates = Array.isArray(campaign.templates_meta)
+    const { data: linkedTemplates, error: linkedTemplatesError } = await admin
+      .from("campanha_templates")
+      .select("templates_meta(*)")
+      .eq("campanha_id", campaignId);
+    const libraryUnavailable =
+      linkedTemplatesError?.code === "42P01" || linkedTemplatesError?.code === "PGRST205";
+    if (linkedTemplatesError && !libraryUnavailable) {
+      throw new HttpError(500, "Could not load campaign templates", linkedTemplatesError.message);
+    }
+    const reusableTemplates = (linkedTemplates ?? [])
+      .map((link) => link.templates_meta)
+      .filter(Boolean)
+      .map((item) => {
+        const record = item as Record<string, unknown>;
+        return {
+          ...(record.payload && typeof record.payload === "object" ? record.payload : {}),
+          library_id: record.id,
+          meta_id: record.meta_id,
+          name: record.name,
+          language: record.language,
+          category: record.category,
+          status: record.status,
+        };
+      });
+    const legacyTemplates = Array.isArray(campaign.templates_meta)
       ? campaign.templates_meta
       : campaign.templates_meta
         ? [campaign.templates_meta]
         : [];
+    const templates = reusableTemplates.length ? reusableTemplates : legacyTemplates;
     const requestedTemplateId =
       typeof body.template_id === "string" || typeof body.template_id === "number"
         ? String(body.template_id)
@@ -35,10 +60,15 @@ serve(
       ? templates.find((item) => {
           if (!item || typeof item !== "object") return false;
           const value = item as Record<string, unknown>;
-          return String(value.meta_id ?? value.name) === requestedTemplateId;
+          return String(value.library_id ?? value.meta_id ?? value.name) === requestedTemplateId;
         })
       : templates[templates.length - 1];
     if (!template) throw new HttpError(409, "Campaign does not have the requested Meta template");
+    const selectedTemplate = template as Record<string, unknown>;
+    const templateStatus = String(selectedTemplate.status ?? "").toUpperCase();
+    if (templateStatus && templateStatus !== "APPROVED") {
+      throw new HttpError(409, `Template is not approved by Meta (status: ${templateStatus})`);
+    }
 
     const { count, error: countError } = await admin
       .from("envio_em_massa")
@@ -72,12 +102,19 @@ serve(
       headers: {
         "Content-Type": "application/json",
         "Idempotency-Key": eventId,
-        "X-Webhook-Secret": webhookSecret,
+        "Automation-Auth": webhookSecret,
       },
       body: JSON.stringify(payload),
     });
     const responseBody = await response.text();
     if (!response.ok) {
+      console.error("campaign webhook rejected", {
+        campanha_id: campaignId,
+        etapa,
+        template_id: requestedTemplateId,
+        status: response.status,
+        response: responseBody.slice(0, 500),
+      });
       throw new HttpError(502, "n8n rejected the campaign trigger", {
         status: response.status,
         response: responseBody.slice(0, 2000),

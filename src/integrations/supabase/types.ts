@@ -101,6 +101,66 @@ export type Database = {
         };
         Relationships: [];
       };
+      templates_meta: {
+        Row: {
+          category: string;
+          created_at: string;
+          created_by: string;
+          id: number;
+          language: string;
+          meta_id: string | null;
+          name: string;
+          payload: Json;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          category: string;
+          created_at?: string;
+          created_by: string;
+          id?: number;
+          language: string;
+          meta_id?: string | null;
+          name: string;
+          payload: Json;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: number;
+          language?: string;
+          meta_id?: string | null;
+          name?: string;
+          payload?: Json;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      campanha_templates: {
+        Row: { campanha_id: number; created_at: string; template_id: number };
+        Insert: { campanha_id: number; created_at?: string; template_id: number };
+        Update: { campanha_id?: number; created_at?: string; template_id?: number };
+        Relationships: [
+          {
+            foreignKeyName: "campanha_templates_campanha_id_fkey";
+            columns: ["campanha_id"];
+            isOneToOne: false;
+            referencedRelation: "campanhas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "campanha_templates_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "templates_meta";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       envio_em_massa: {
         Row: {
           bsuid: string | null;

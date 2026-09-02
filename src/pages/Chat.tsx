@@ -30,10 +30,29 @@ type Msg = {
 
 const META_SERVICE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+const canonicalPhone = (value: string | null | undefined) => {
+  const digits = value?.replace(/\D/g, "") ?? "";
+  if (!digits) return "";
+  return digits.startsWith("55") ? digits : `55${digits}`;
+};
+
+const messageStatusLabel = (status: string | null) => {
+  const labels: Record<string, string> = {
+    accepted: "Aceita",
+    sending: "Enviando",
+    sent: "Enviada",
+    delivered: "Entregue",
+    read: "Lida",
+    failed: "Falhou",
+  };
+  return status ? (labels[status.toLowerCase()] ?? status) : "";
+};
+
 export default function ChatPage() {
   const isDemo = useIsDemo();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [templateBodies, setTemplateBodies] = useState<Record<string, string>>({});
   const [activePhone, setActivePhone] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [input, setInput] = useState("");
@@ -49,16 +68,53 @@ export default function ChatPage() {
       return;
     }
     const load = async () => {
-      const [c, m] = await Promise.all([
+      const [c, campaignContacts, m, templates] = await Promise.all([
         supabase.from("dados_cliente").select("*").order("created_at", { ascending: false }),
+        supabase.from("envio_em_massa").select("id,bsuid,nome,telefone"),
         supabase
           .from("webhook_messages")
           .select("*")
           .order("created_at", { ascending: true })
           .limit(2000),
+        supabase.from("templates_meta").select("name,payload"),
       ]);
-      setClientes((c.data as Cliente[]) ?? []);
+      const directClients = (c.data as Cliente[]) ?? [];
+      const knownPhones = new Set(directClients.map((client) => canonicalPhone(client.telefone)));
+      const campaignClients = (campaignContacts.data ?? [])
+        .filter((contact) => contact.telefone && !knownPhones.has(canonicalPhone(contact.telefone)))
+        .map(
+          (contact): Cliente => ({
+            id: `campaign-${contact.id}`,
+            bsuid: contact.bsuid ?? "",
+            nome: contact.nome,
+            telefone: contact.telefone,
+            responded: null,
+            ia_ativa: false,
+            created_at: "",
+          }),
+        );
+      setClientes([...directClients, ...campaignClients]);
       setMessages((m.data as Msg[]) ?? []);
+      setTemplateBodies(
+        Object.fromEntries(
+          (templates.data ?? []).flatMap((template) => {
+            const payload =
+              template.payload &&
+              typeof template.payload === "object" &&
+              !Array.isArray(template.payload)
+                ? (template.payload as Record<string, unknown>)
+                : null;
+            const components = Array.isArray(payload?.components) ? payload.components : [];
+            const body = components.find(
+              (component) =>
+                component &&
+                typeof component === "object" &&
+                String((component as Record<string, unknown>).type).toUpperCase() === "BODY",
+            ) as Record<string, unknown> | undefined;
+            return typeof body?.text === "string" ? [[template.name, body.text]] : [];
+          }),
+        ),
+      );
     };
     load();
 
@@ -75,31 +131,58 @@ export default function ChatPage() {
     };
   }, [isDemo]);
 
-  const filteredClientes = useMemo(() => {
-    const q = search.toLowerCase();
-    return clientes.filter(
-      (c) => !q || c.nome?.toLowerCase().includes(q) || c.telefone?.includes(q),
-    );
-  }, [clientes, search]);
-
   const lastMsgByPhone = useMemo(() => {
     const m = new Map<string, Msg>();
     for (const msg of messages) {
       if (!msg.telefone) continue;
-      m.set(msg.telefone, msg);
+      const phone = canonicalPhone(msg.telefone);
+      const current = m.get(phone);
+      if (!current || new Date(msg.created_at).getTime() > new Date(current.created_at).getTime()) {
+        m.set(phone, msg);
+      }
     }
     return m;
   }, [messages]);
 
+  const filteredClientes = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return clientes
+      .filter((client) => {
+        return !q || client.nome?.toLowerCase().includes(q) || client.telefone?.includes(q);
+      })
+      .sort((left, right) => {
+        const leftMessage = left.telefone
+          ? lastMsgByPhone.get(canonicalPhone(left.telefone))
+          : undefined;
+        const rightMessage = right.telefone
+          ? lastMsgByPhone.get(canonicalPhone(right.telefone))
+          : undefined;
+        const leftTime = leftMessage
+          ? new Date(leftMessage.created_at).getTime()
+          : new Date(left.created_at || 0).getTime();
+        const rightTime = rightMessage
+          ? new Date(rightMessage.created_at).getTime()
+          : new Date(right.created_at || 0).getTime();
+        return rightTime - leftTime;
+      });
+  }, [clientes, lastMsgByPhone, search]);
+
   const activeMessages = useMemo(
-    () => messages.filter((m) => m.telefone === activePhone),
+    () => messages.filter((m) => canonicalPhone(m.telefone) === canonicalPhone(activePhone)),
     [messages, activePhone],
   );
 
   const activeCliente = useMemo(
-    () => clientes.find((c) => c.telefone === activePhone) ?? null,
+    () => clientes.find((c) => canonicalPhone(c.telefone) === canonicalPhone(activePhone)) ?? null,
     [clientes, activePhone],
   );
+
+  const messageText = (message: Msg, clientName?: string | null) => {
+    const storedText = message.message_text ?? "";
+    const templateName = storedText.match(/^\[template\]\s+(.+)$/)?.[1];
+    const text = templateName ? (templateBodies[templateName] ?? storedText) : storedText;
+    return text.replace(/\{\{1\}\}/g, clientName?.trim() || "Cliente");
+  };
 
   const lastClientMessage = useMemo(
     () =>
@@ -256,8 +339,8 @@ export default function ChatPage() {
               <p className="p-6 text-center text-sm text-muted-foreground">Nenhum cliente</p>
             )}
             {filteredClientes.map((c) => {
-              const last = c.telefone ? lastMsgByPhone.get(c.telefone) : null;
-              const active = c.telefone === activePhone;
+              const last = c.telefone ? lastMsgByPhone.get(canonicalPhone(c.telefone)) : null;
+              const active = canonicalPhone(c.telefone) === canonicalPhone(activePhone);
               const responded = c.responded === "true";
               return (
                 <button
@@ -290,7 +373,7 @@ export default function ChatPage() {
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs text-muted-foreground truncate">
-                        {last?.message_text ?? c.telefone ?? "—"}
+                        {last ? messageText(last, c.nome) : (c.telefone ?? "—")}
                       </p>
                       <div className="flex items-center gap-2 shrink-0">
                         <label
@@ -379,7 +462,7 @@ export default function ChatPage() {
                         )}
                       >
                         <p className="whitespace-pre-wrap break-words leading-relaxed">
-                          {m.message_text}
+                          {messageText(m, activeCliente?.nome)}
                         </p>
                         <div
                           className={cn(
@@ -391,7 +474,9 @@ export default function ChatPage() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                          {!isClient && m.message_status && <span>{m.message_status}</span>}
+                          {!isClient && m.message_status && (
+                            <span>{messageStatusLabel(m.message_status)}</span>
+                          )}
                         </div>
                       </div>
                     </motion.div>
