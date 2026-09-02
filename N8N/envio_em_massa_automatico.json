@@ -1,0 +1,418 @@
+{
+  "name": "Envio em massa automático",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "CONFIGURE_WEBHOOK_PATH",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "campaign",
+              "name": "campanha_id",
+              "value": "={{ $json.body?.campanha_id ?? $json.campanha_id }}",
+              "type": "number"
+            },
+            {
+              "id": "stage",
+              "name": "etapa",
+              "value": "={{ $json.body?.etapa ?? $json.etapa ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "template",
+              "name": "template_name",
+              "value": "={{ $json.body?.template?.name ?? $json.template?.name ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "language",
+              "name": "template_language",
+              "value": "={{ $json.body?.template?.language ?? $json.template?.language ?? 'pt_BR' }}",
+              "type": "string"
+            },
+            {
+              "id": "template_text",
+              "name": "template_text",
+              "value": "={{ ($json.body?.template?.components ?? $json.template?.components ?? []).find(component => String(component.type ?? '').toUpperCase() === 'BODY')?.text ?? ('Template: ' + ($json.body?.template?.name ?? $json.template?.name ?? '')) }}",
+              "type": "string"
+            },
+            {
+              "id": "event",
+              "name": "event_id",
+              "value": "={{ $json.body?.event_id ?? $json.event_id ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {
+          "ignoreConversionErrors": false
+        }
+      },
+      "name": "Normalizar disparo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "campanhas",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalizar disparo').item.json.campanha_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "em_andamento"
+            }
+          ]
+        }
+      },
+      "name": "Marcar campanha em andamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        528,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "envio_em_massa",
+        "returnAll": true,
+        "orderBy": "id.asc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "campanha_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalizar disparo').item.json.campanha_id }}"
+            },
+            {
+              "keyName": "etapa",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalizar disparo').item.json.etapa }}"
+            }
+          ]
+        }
+      },
+      "name": "Buscar contatos da campanha",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        784,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Processar um contato por vez",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "envio_em_massa",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Buscar contatos da campanha').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "etapa",
+              "fieldValue": "={{ Number($('Normalizar disparo').item.json.etapa) + 1 }}"
+            }
+          ]
+        }
+      },
+      "name": "Avançar etapa do contato",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "name": "Intervalo entre envios",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2080,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "campanhas",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalizar disparo').item.json.campanha_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "concluida"
+            }
+          ]
+        }
+      },
+      "name": "Marcar campanha concluída",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/CONFIGURE_PHONE_NUMBER_ID/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { messaging_product: 'whatsapp', to: String($json.telefone ?? $json.bsuid ?? '').replace(/\\D/g, ''), type: 'template', template: { name: $('Normalizar disparo').item.json.template_name, language: { code: $('Normalizar disparo').item.json.template_language }, components: [{ type: 'body', parameters: [{ type: 'text', text: String($json.nome ?? 'Cliente') }] }] } } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "name": "Enviar template Meta via HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1312,
+        112
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "webhook_messages",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $json.messages?.[0]?.id }}"
+            },
+            {
+              "fieldId": "message_status",
+              "fieldValue": "={{ $json.messages?.[0]?.message_status ?? 'sent' }}"
+            },
+            {
+              "fieldId": "message_text",
+              "fieldValue": "={{ String($('Normalizar disparo').item.json.template_text).replace(/\\{\\{1\\}\\}/g, $('Buscar contatos da campanha').item.json.nome ?? 'Cliente') }}"
+            },
+            {
+              "fieldId": "who_sent",
+              "fieldValue": "campaign"
+            },
+            {
+              "fieldId": "telefone",
+              "fieldValue": "={{ $json.contacts?.[0]?.wa_id ?? (String($('Buscar contatos da campanha').item.json.telefone ?? '').replace(/\\D/g, '').startsWith('55') ? String($('Buscar contatos da campanha').item.json.telefone).replace(/\\D/g, '') : '55' + String($('Buscar contatos da campanha').item.json.telefone ?? '').replace(/\\D/g, '')) }}"
+            },
+            {
+              "fieldId": "bsuid",
+              "fieldValue": "={{ $json.contacts?.[0]?.user_id ?? $json.contacts?.[0]?.wa_id ?? $('Buscar contatos da campanha').item.json.bsuid ?? '' }}"
+            },
+            {
+              "fieldId": "campanha_id",
+              "fieldValue": "={{ $('Normalizar disparo').item.json.campanha_id }}"
+            },
+            {
+              "fieldId": "envio_em_massa_id",
+              "fieldValue": "={{ $('Buscar contatos da campanha').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "name": "Salvar em webhook_messages",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        112
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalizar disparo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar disparo": {
+      "main": [
+        [
+          {
+            "node": "Marcar campanha em andamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar campanha em andamento": {
+      "main": [
+        [
+          {
+            "node": "Buscar contatos da campanha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar contatos da campanha": {
+      "main": [
+        [
+          {
+            "node": "Processar um contato por vez",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar um contato por vez": {
+      "main": [
+        [
+          {
+            "node": "Marcar campanha concluída",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar template Meta via HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avançar etapa do contato": {
+      "main": [
+        [
+          {
+            "node": "Intervalo entre envios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intervalo entre envios": {
+      "main": [
+        [
+          {
+            "node": "Processar um contato por vez",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar template Meta via HTTP": {
+      "main": [
+        [
+          {
+            "node": "Salvar em webhook_messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar em webhook_messages": {
+      "main": [
+        [
+          {
+            "node": "Avançar etapa do contato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "active": false,
+  "tags": []
+}

@@ -64,12 +64,22 @@ src/
 supabase/
   functions/            Edge Functions autenticadas
   migrations/           schema, RLS e regras de autorização
-N8N/                    workflow de automação do WhatsApp
+N8N/                    templates sanitizados dos workflows do n8n
 ```
 
-O workflow versionado é um template sanitizado: IDs de webhook, referências de
-credenciais e o identificador do telefone foram removidos. Após importar o JSON,
-reconecte manualmente cada credencial no n8n e configure o Phone Number ID.
+Os dois workflows utilizados no n8n estão versionados como templates sanitizados:
+
+- `envio_em_massa_automatico.json`: recebe uma campanha, consulta os contatos e
+  realiza os envios individualmente pela API HTTP da Meta;
+- `whatsapp_automation.json`: processa mensagens e eventos do WhatsApp, registra
+  o histórico e executa a automação de atendimento.
+
+IDs de workflow, nós, webhook e instância, referências de credenciais, tokens e
+o identificador do telefone foram removidos. Após importar os arquivos,
+reconecte manualmente cada credencial no n8n, substitua
+`CONFIGURE_PHONE_NUMBER_ID` e configure um caminho exclusivo no lugar de
+`CONFIGURE_WEBHOOK_PATH`. As instruções completas estão em
+[N8N/README.md](./N8N/README.md).
 
 ## Configuração local
 
