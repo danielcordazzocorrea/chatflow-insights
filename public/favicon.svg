@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="background" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB" />
-      <stop offset="1" stop-color="#22D3EE" />
+      <stop stop-color="#0F9F5B" />
+      <stop offset="1" stop-color="#20C873" />
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="url(#background)" />
@@ -10,7 +10,7 @@
     fill="#fff"
     d="M17 16h30a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H31L20 53v-8h-3a5 5 0 0 1-5-5V21a5 5 0 0 1 5-5Z"
   />
-  <circle cx="23" cy="31" r="3" fill="#2563EB" />
-  <circle cx="32" cy="31" r="3" fill="#258CD9" />
-  <path fill="#22B8D5" d="m43 23 1.7 4.3L49 29l-4.3 1.7L43 35l-1.7-4.3L37 29l4.3-1.7L43 23Z" />
+  <circle cx="23" cy="31" r="3" fill="#063821" />
+  <circle cx="32" cy="31" r="3" fill="#0B5F3A" />
+  <path fill="#86EFAC" d="m43 23 1.7 4.3L49 29l-4.3 1.7L43 35l-1.7-4.3L37 29l4.3-1.7L43 23Z" />
 </svg>

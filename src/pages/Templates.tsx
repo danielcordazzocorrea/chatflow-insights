@@ -170,7 +170,7 @@ export default function Templates() {
           >
             Campanhas
           </Link>
-          <span className="rounded-lg bg-sky-400/15 px-4 py-2 text-sky-300">Templates</span>
+          <span className="rounded-lg bg-emerald-400/15 px-4 py-2 text-emerald-300">Templates</span>
         </nav>
 
         <div className="mb-4 flex items-end justify-between gap-4">
@@ -191,10 +191,10 @@ export default function Templates() {
               tabIndex={0}
               onClick={() => setSelected(template)}
               onKeyDown={(event) => event.key === "Enter" && setSelected(template)}
-              className="control-card cursor-pointer p-5 transition hover:-translate-y-0.5 hover:border-sky-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="control-card cursor-pointer p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-400/10 text-sky-300">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
                   <FileText className="h-5 w-5" />
                 </span>
                 <Badge variant="outline" className={statusClass(template.status)}>
@@ -214,7 +214,7 @@ export default function Templates() {
                   <Send className="h-3.5 w-3.5" />
                   Usado em {template.campanha_templates?.length ?? 0} campanha(s)
                 </span>
-                <span className="inline-flex items-center gap-1 font-semibold text-sky-300">
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-300">
                   <Eye className="h-3.5 w-3.5" /> Ver template
                 </span>
               </div>
@@ -275,7 +275,7 @@ function TemplateDetails({
                 {buttonItems.map((button, index) => (
                   <div
                     key={index}
-                    className="border-b border-[#374248] px-3 py-2.5 text-center text-xs font-semibold text-[#53bdeb] last:border-0"
+                    className="border-b border-[#374248] px-3 py-2.5 text-center text-xs font-semibold text-[#20c873] last:border-0"
                   >
                     {String(button.text ?? "Botão")}
                   </div>

@@ -9,14 +9,14 @@ export type ChartSeries = { name: string; data: SeriesPoint[]; color: string };
 
 // Shared by the card so labels and chart always use the same palette.
 export const ACCENTS = {
-  sky: { stroke: "#38bdf8", text: "#7dd3fc" },
+  sky: { stroke: "#20c873", text: "#86efac" },
   emerald: { stroke: "#34d399", text: "#6ee7b7" },
   rose: { stroke: "#fb7185", text: "#fda4af" },
   neutral: { stroke: "#94a3b8", text: "#cbd5e1" },
 } satisfies Record<MetricAccent, { stroke: string; text: string }>;
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const SERIES_COLORS = ["#38bdf8", "#7dd3fc", "#818cf8", "#c084fc"];
+export const SERIES_COLORS = ["#20c873", "#50e596", "#0f9f5b", "#86efac"];
 // eslint-disable-next-line react-refresh/only-export-components
 export const formatCompact = (value: number) =>
   Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 }).format(value);

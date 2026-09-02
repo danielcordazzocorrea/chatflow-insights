@@ -68,10 +68,10 @@ const statusLabels: Record<Campaign["status"], string> = {
 const statusClasses: Record<Campaign["status"], string> = {
   rascunho: "border-amber-400/20 bg-amber-400/10 text-amber-300",
   aguardando_aprovacao: "border-violet-400/20 bg-violet-400/10 text-violet-300",
-  pronta: "border-sky-400/20 bg-sky-400/10 text-sky-300",
+  pronta: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
   em_andamento: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
   pausada: "border-orange-400/20 bg-orange-400/10 text-orange-300",
-  concluida: "border-cyan-400/20 bg-cyan-400/10 text-cyan-300",
+  concluida: "border-green-400/20 bg-green-400/10 text-green-300",
   cancelada: "border-slate-400/20 bg-slate-400/10 text-slate-300",
   erro: "border-red-400/20 bg-red-400/10 text-red-300",
 };
@@ -209,15 +209,15 @@ export default function CampaignDetails() {
     .map((stage, index) => ({
       name: stageLabel(stage, linkCampaign),
       value: stageCounts.get(stage) ?? 0,
-      color: ["#475569", "#38bdf8", "#34d399", "#a78bfa", "#fbbf24"][index % 5],
+      color: ["#475569", "#20c873", "#34d399", "#86efac", "#fbbf24"][index % 5],
     }));
   const messageData = [
     { name: "Lidas", value: messageCounts.get("read") ?? 0, color: "#34d399" },
-    { name: "Entregues", value: messageCounts.get("delivered") ?? 0, color: "#22d3ee" },
+    { name: "Entregues", value: messageCounts.get("delivered") ?? 0, color: "#20c873" },
     {
       name: "Enviadas",
       value: (messageCounts.get("sent") ?? 0) + (messageCounts.get("accepted") ?? 0),
-      color: "#38bdf8",
+      color: "#86efac",
     },
     { name: "Falhas", value: messageCounts.get("failed") ?? 0, color: "#fb7185" },
   ];
@@ -410,7 +410,7 @@ export default function CampaignDetails() {
             <Card key={label} className="metric-card min-w-0 p-4 sm:p-5">
               <div className="mb-5 flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-                <span className="metric-icon bg-sky-400/10 text-sky-300">
+                <span className="metric-icon bg-emerald-400/10 text-emerald-300">
                   <Icon className="h-4 w-4" />
                 </span>
               </div>
@@ -480,7 +480,7 @@ export default function CampaignDetails() {
                             stage >= 2
                               ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
                               : stage === 1
-                                ? "border-sky-400/20 bg-sky-400/10 text-sky-300"
+                                ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
                                 : "border-slate-400/20 bg-slate-400/10 text-slate-300",
                           )}
                         >
@@ -642,8 +642,8 @@ function DistributionCard({
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: "#0d1a2a",
-                  border: "1px solid #26384d",
+                  background: "#0d1713",
+                  border: "1px solid #263d33",
                   borderRadius: 10,
                 }}
               />

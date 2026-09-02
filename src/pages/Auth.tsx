@@ -9,7 +9,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Login — WhatsApp Automation";
+    document.title = "Entrar — Whats·Ops";
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate("/dashboard", { replace: true });
     });

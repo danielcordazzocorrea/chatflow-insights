@@ -76,10 +76,10 @@ const statusLabels: Record<Campaign["status"], string> = {
 const statusClasses: Record<Campaign["status"], string> = {
   rascunho: "bg-amber-400/10 text-amber-300 border-amber-400/20",
   aguardando_aprovacao: "bg-violet-400/10 text-violet-300 border-violet-400/20",
-  pronta: "bg-sky-400/10 text-sky-300 border-sky-400/20",
+  pronta: "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
   em_andamento: "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
   pausada: "bg-orange-400/10 text-orange-300 border-orange-400/20",
-  concluida: "bg-cyan-400/10 text-cyan-300 border-cyan-400/20",
+  concluida: "bg-green-400/10 text-green-300 border-green-400/20",
   cancelada: "bg-slate-400/10 text-slate-300 border-slate-400/20",
   erro: "bg-red-400/10 text-red-300 border-red-400/20",
 };
@@ -311,12 +311,12 @@ export default function Campaigns() {
     return selected?.tipo === 1
       ? [
           { name: "Não enviados", value: stage0, color: "#475569" },
-          { name: "Enviados", value: stage1, color: "#38bdf8" },
+          { name: "Enviados", value: stage1, color: "#20c873" },
           { name: "Clicaram", value: stage2, color: "#34d399" },
         ]
       : [
           { name: "Não enviados", value: stage0, color: "#475569" },
-          { name: "Enviados", value: stage1, color: "#38bdf8" },
+          { name: "Enviados", value: stage1, color: "#20c873" },
           { name: "Interagiram", value: stage2, color: "#34d399" },
         ];
   }, [selected?.tipo, stageCounts]);
@@ -329,11 +329,11 @@ export default function Campaigns() {
     });
     return [
       { name: "Lidas", value: counts.get("read") ?? 0, color: "#34d399" },
-      { name: "Entregues", value: counts.get("delivered") ?? 0, color: "#22d3ee" },
+      { name: "Entregues", value: counts.get("delivered") ?? 0, color: "#20c873" },
       {
         name: "Enviadas",
         value: (counts.get("sent") ?? 0) + (counts.get("accepted") ?? 0),
-        color: "#38bdf8",
+        color: "#86efac",
       },
       { name: "Falhas", value: counts.get("failed") ?? 0, color: "#fb7185" },
     ];
@@ -344,7 +344,7 @@ export default function Campaigns() {
       label: "Campanhas",
       value: campaigns.length,
       icon: Send,
-      color: "text-sky-300 bg-sky-400/10",
+      color: "text-emerald-300 bg-emerald-400/10",
     },
     {
       label: "Rascunhos",
@@ -362,7 +362,7 @@ export default function Campaigns() {
       label: "Concluídas",
       value: campaigns.filter((item) => item.status === "concluida").length,
       icon: CheckCircle2,
-      color: "text-cyan-300 bg-cyan-400/10",
+      color: "text-green-300 bg-green-400/10",
     },
   ];
 
@@ -472,7 +472,7 @@ export default function Campaigns() {
         </header>
 
         <nav className="mb-4 flex w-fit rounded-xl border bg-card/40 p-1 text-sm font-semibold">
-          <span className="rounded-lg bg-sky-400/15 px-4 py-2 text-sky-300">Campanhas</span>
+          <span className="rounded-lg bg-emerald-400/15 px-4 py-2 text-emerald-300">Campanhas</span>
           <Link
             to="/campanhas/templates"
             className="rounded-lg px-4 py-2 text-muted-foreground transition hover:text-foreground"
@@ -522,7 +522,7 @@ export default function Campaigns() {
                   key={campaign.id}
                   type="button"
                   onClick={() => navigate(`/campanhas/${campaign.id}`)}
-                  className="control-card group min-w-0 rounded-2xl p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-sky-400/50 hover:shadow-[0_18px_40px_-28px_rgba(56,189,248,.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  className="control-card group min-w-0 rounded-2xl p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_18px_40px_-28px_rgba(32,200,115,.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -532,16 +532,16 @@ export default function Campaigns() {
                       </div>
                       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         {campaign.tipo === 1 ? (
-                          <Link2 className="h-3.5 w-3.5 text-sky-300" />
+                          <Link2 className="h-3.5 w-3.5 text-emerald-300" />
                         ) : (
-                          <MessageCircle className="h-3.5 w-3.5 text-sky-300" />
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-300" />
                         )}
                         {campaign.tipo === 1 ? "Campanha com link" : "Campanha de interação"}
                         <span>·</span>
                         <span>{metrics.contacts} contatos</span>
                       </p>
                     </div>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-sky-400/[0.06] text-sky-300 transition group-hover:bg-sky-400/15">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-emerald-400/[0.06] text-emerald-300 transition group-hover:bg-emerald-400/15">
                       <ChevronRight className="h-4 w-4" />
                     </span>
                   </div>
@@ -555,7 +555,7 @@ export default function Campaigns() {
 
                   <div className="flex items-center justify-between border-t pt-3 text-[10px] text-muted-foreground">
                     <span>{formatDate(campaign.created_at)}</span>
-                    <span className="font-bold text-sky-300">Abrir campanha</span>
+                    <span className="font-bold text-emerald-300">Abrir campanha</span>
                   </div>
                 </button>
               );
@@ -675,7 +675,7 @@ function CampaignPercentage({ label, value }: { label: string; value: number }) 
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-700/60">
         <span
-          className="block h-full rounded-full bg-sky-400 transition-[width] duration-500"
+          className="block h-full rounded-full bg-emerald-400 transition-[width] duration-500"
           style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
         />
       </div>
@@ -699,7 +699,7 @@ function ReportCard({
           <h3 className="font-semibold">{title}</h3>
           <p className="text-xs text-muted-foreground">Distribuição atual da campanha</p>
         </div>
-        <Users className="h-4 w-4 text-sky-300" />
+        <Users className="h-4 w-4 text-emerald-300" />
       </div>
       <div className="grid items-center gap-3 sm:grid-cols-[210px_1fr]">
         <div className="relative h-48">
@@ -720,8 +720,8 @@ function ReportCard({
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: "#0d1a2a",
-                  border: "1px solid #26384d",
+                  background: "#0d1713",
+                  border: "1px solid #263d33",
                   borderRadius: 10,
                 }}
               />

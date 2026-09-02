@@ -1,29 +1,17 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Check,
+  Copy,
+  Eye,
+  EyeOff,
+  Loader2,
+  LockKeyhole,
+  MessageCircleMore,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-
-import * as THREE from "three";
-import { Loader2, ArrowLeft } from "lucide-react";
-import BrandChatIcon from "@/components/BrandChatIcon";
-
-type Uniforms = {
-  [key: string]: {
-    value: number[] | number[][] | number;
-    type: string;
-  };
-};
-
-interface ShaderProps {
-  source: string;
-  uniforms: {
-    [key: string]: {
-      value: number[] | number[][] | number;
-      type: string;
-    };
-  };
-  maxFps?: number;
-}
+import Velaris from "@/components/ui/velaris";
 
 interface SignInPageProps {
   className?: string;
@@ -31,559 +19,235 @@ interface SignInPageProps {
   loading?: boolean;
 }
 
-export const CanvasRevealEffect = ({
-  animationSpeed = 10,
-  opacities = [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1],
-  colors = [[125, 211, 252]],
-  containerClassName,
-  dotSize,
-  showGradient = true,
-  reverse = false,
-}: {
-  animationSpeed?: number;
-  opacities?: number[];
-  colors?: number[][];
-  containerClassName?: string;
-  dotSize?: number;
-  showGradient?: boolean;
-  reverse?: boolean;
-}) => {
-  return (
-    <div className={cn("h-full relative w-full", containerClassName)}>
-      <div className="h-full w-full">
-        <DotMatrix
-          colors={colors ?? [[125, 211, 252]]}
-          dotSize={dotSize ?? 3}
-          opacities={opacities ?? [0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.8, 0.8, 0.8, 1]}
-          shader={`
-            ${reverse ? "u_reverse_active" : "false"}_;
-            animation_speed_factor_${animationSpeed.toFixed(1)}_;
-          `}
-          center={["x", "y"]}
-        />
-      </div>
-      {showGradient && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-      )}
-    </div>
-  );
-};
-
-interface DotMatrixProps {
-  colors?: number[][];
-  opacities?: number[];
-  totalSize?: number;
-  dotSize?: number;
-  shader?: string;
-  center?: ("x" | "y")[];
-}
-
-const DotMatrix: React.FC<DotMatrixProps> = ({
-  colors = [[0, 0, 0]],
-  opacities = [0.04, 0.04, 0.04, 0.04, 0.04, 0.08, 0.08, 0.08, 0.08, 0.14],
-  totalSize = 20,
-  dotSize = 2,
-  shader = "",
-  center = ["x", "y"],
-}) => {
-  const uniforms = React.useMemo(() => {
-    let colorsArray = [colors[0], colors[0], colors[0], colors[0], colors[0], colors[0]];
-    if (colors.length === 2) {
-      colorsArray = [colors[0], colors[0], colors[0], colors[1], colors[1], colors[1]];
-    } else if (colors.length === 3) {
-      colorsArray = [colors[0], colors[0], colors[1], colors[1], colors[2], colors[2]];
-    }
-    return {
-      u_colors: {
-        value: colorsArray.map((color) => [color[0] / 255, color[1] / 255, color[2] / 255]),
-        type: "uniform3fv",
-      },
-      u_opacities: {
-        value: opacities,
-        type: "uniform1fv",
-      },
-      u_total_size: {
-        value: totalSize,
-        type: "uniform1f",
-      },
-      u_dot_size: {
-        value: dotSize,
-        type: "uniform1f",
-      },
-      u_reverse: {
-        value: shader.includes("u_reverse_active") ? 1 : 0,
-        type: "uniform1i",
-      },
-    };
-  }, [colors, opacities, totalSize, dotSize, shader]);
-
-  return (
-    <Shader
-      source={`
-        precision mediump float;
-        in vec2 fragCoord;
-
-        uniform float u_time;
-        uniform float u_opacities[10];
-        uniform vec3 u_colors[6];
-        uniform float u_total_size;
-        uniform float u_dot_size;
-        uniform vec2 u_resolution;
-        uniform int u_reverse;
-
-        out vec4 fragColor;
-
-        float PHI = 1.61803398874989484820459;
-        float random(vec2 xy) {
-            return fract(tan(distance(xy * PHI, xy) * 0.5) * xy.x);
-        }
-        float map(float value, float min1, float max1, float min2, float max2) {
-            return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-        }
-
-        void main() {
-            vec2 st = fragCoord.xy;
-            ${
-              center.includes("x")
-                ? "st.x -= abs(floor((mod(u_resolution.x, u_total_size) - u_dot_size) * 0.5));"
-                : ""
-            }
-            ${
-              center.includes("y")
-                ? "st.y -= abs(floor((mod(u_resolution.y, u_total_size) - u_dot_size) * 0.5));"
-                : ""
-            }
-
-            float opacity = step(0.0, st.x);
-            opacity *= step(0.0, st.y);
-
-            vec2 st2 = vec2(int(st.x / u_total_size), int(st.y / u_total_size));
-
-            float frequency = 5.0;
-            float show_offset = random(st2);
-            float rand = random(st2 * floor((u_time / frequency) + show_offset + frequency));
-            opacity *= u_opacities[int(rand * 10.0)];
-            opacity *= 1.0 - step(u_dot_size / u_total_size, fract(st.x / u_total_size));
-            opacity *= 1.0 - step(u_dot_size / u_total_size, fract(st.y / u_total_size));
-
-            vec3 color = u_colors[int(show_offset * 6.0)];
-
-            float animation_speed_factor = 0.5;
-            vec2 center_grid = u_resolution / 2.0 / u_total_size;
-            float dist_from_center = distance(center_grid, st2);
-
-            float timing_offset_intro = dist_from_center * 0.01 + (random(st2) * 0.15);
-            float max_grid_dist = distance(center_grid, vec2(0.0, 0.0));
-            float timing_offset_outro = (max_grid_dist - dist_from_center) * 0.02 + (random(st2 + 42.0) * 0.2);
-
-
-            float current_timing_offset;
-            if (u_reverse == 1) {
-                current_timing_offset = timing_offset_outro;
-                 opacity *= 1.0 - step(current_timing_offset, u_time * animation_speed_factor);
-                 opacity *= clamp((step(current_timing_offset + 0.1, u_time * animation_speed_factor)) * 1.25, 1.0, 1.25);
-            } else {
-                current_timing_offset = timing_offset_intro;
-                 opacity *= step(current_timing_offset, u_time * animation_speed_factor);
-                 opacity *= clamp((1.0 - step(current_timing_offset + 0.1, u_time * animation_speed_factor)) * 1.25, 1.0, 1.25);
-            }
-
-
-            fragColor = vec4(color, opacity);
-            fragColor.rgb *= fragColor.a;
-        }`}
-      uniforms={uniforms}
-      maxFps={60}
-    />
-  );
-};
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const ShaderMaterial = ({
-  source,
-  uniforms,
-  maxFps = 60,
-}: {
-  source: string;
-  hovered?: boolean;
-  maxFps?: number;
-  uniforms: Uniforms;
-}) => {
-  const { size } = useThree();
-  const ref = useRef<THREE.Mesh>(null);
-  let lastFrameTime = 0;
-
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const timestamp = clock.getElapsedTime();
-
-    lastFrameTime = timestamp;
-
-    const material: any = ref.current.material;
-    const timeLocation = material.uniforms.u_time;
-    timeLocation.value = timestamp;
-  });
-
-  const getUniforms = () => {
-    const preparedUniforms: any = {};
-
-    for (const uniformName in uniforms) {
-      const uniform: any = uniforms[uniformName];
-
-      switch (uniform.type) {
-        case "uniform1f":
-          preparedUniforms[uniformName] = { value: uniform.value, type: "1f" };
-          break;
-        case "uniform1i":
-          preparedUniforms[uniformName] = { value: uniform.value, type: "1i" };
-          break;
-        case "uniform3f":
-          preparedUniforms[uniformName] = {
-            value: new THREE.Vector3().fromArray(uniform.value),
-            type: "3f",
-          };
-          break;
-        case "uniform1fv":
-          preparedUniforms[uniformName] = { value: uniform.value, type: "1fv" };
-          break;
-        case "uniform3fv":
-          preparedUniforms[uniformName] = {
-            value: uniform.value.map((v: number[]) => new THREE.Vector3().fromArray(v)),
-            type: "3fv",
-          };
-          break;
-        case "uniform2f":
-          preparedUniforms[uniformName] = {
-            value: new THREE.Vector2().fromArray(uniform.value),
-            type: "2f",
-          };
-          break;
-        default:
-          console.error(`Invalid uniform type for '${uniformName}'.`);
-          break;
-      }
-    }
-
-    preparedUniforms["u_time"] = { value: 0, type: "1f" };
-    preparedUniforms["u_resolution"] = {
-      value: new THREE.Vector2(size.width * 2, size.height * 2),
-    };
-    return preparedUniforms;
-  };
-
-  const material = useMemo(() => {
-    const materialObject = new THREE.ShaderMaterial({
-      vertexShader: `
-      precision mediump float;
-      in vec2 coordinates;
-      uniform vec2 u_resolution;
-      out vec2 fragCoord;
-      void main(){
-        float x = position.x;
-        float y = position.y;
-        gl_Position = vec4(x, y, 0.0, 1.0);
-        fragCoord = (position.xy + vec2(1.0)) * 0.5 * u_resolution;
-        fragCoord.y = u_resolution.y - fragCoord.y;
-      }
-      `,
-      fragmentShader: source,
-      uniforms: getUniforms(),
-      glslVersion: THREE.GLSL3,
-      blending: THREE.CustomBlending,
-      blendSrc: THREE.SrcAlphaFactor,
-      blendDst: THREE.OneFactor,
-    });
-
-    return materialObject;
-  }, [size.width, size.height, source]);
-
-  return (
-    <mesh ref={ref as any}>
-      <planeGeometry args={[2, 2]} />
-      <primitive object={material} attach="material" />
-    </mesh>
-  );
-};
-
-const Shader: React.FC<ShaderProps> = ({ source, uniforms, maxFps = 60 }) => {
-  return (
-    <Canvas className="absolute inset-0  h-full w-full">
-      <ShaderMaterial source={source} uniforms={uniforms} maxFps={maxFps} />
-    </Canvas>
-  );
-};
-
+const demoCredentials = { email: "user@example.com", password: "password" };
 export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageProps) => {
-  const [email, setEmail] = useState("user@example.com");
-  const [password, setPassword] = useState("password");
-  const [step, setStep] = useState<"credentials" | "success">("credentials");
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [initialCanvasVisible, setInitialCanvasVisible] = useState(true);
-  const [reverseCanvasVisible, setReverseCanvasVisible] = useState(false);
+  const [email, setEmail] = useState(demoCredentials.email);
+  const [password, setPassword] = useState(demoCredentials.password);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState<"email" | "password" | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-
-    if (onSubmit) {
-      try {
-        await onSubmit(email, password);
-        triggerSuccess();
-      } catch {
-        // error handled by parent
-      }
-    } else {
-      triggerSuccess();
-    }
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (email && password && !loading) await onSubmit?.(email, password);
   };
 
-  const triggerSuccess = () => {
-    setReverseCanvasVisible(true);
-    setTimeout(() => {
-      setInitialCanvasVisible(false);
-    }, 50);
-    setTimeout(() => {
-      setStep("success");
-    }, 2000);
+  const copyCredential = async (key: "email" | "password") => {
+    await navigator.clipboard.writeText(demoCredentials[key]);
+    setCopied(key);
+    window.setTimeout(() => setCopied(null), 1600);
   };
 
-  const handleBackClick = () => {
-    setStep("credentials");
-    setReverseCanvasVisible(false);
-    setInitialCanvasVisible(true);
-  };
-
-  return (
-    <div className={cn("flex w-[100%] flex-col min-h-screen bg-background relative", className)}>
-      <div className="absolute inset-0 z-0">
-        {initialCanvasVisible && (
-          <div className="absolute inset-0">
-            <CanvasRevealEffect
-              animationSpeed={3}
-              containerClassName="bg-black"
-              colors={[
-                [125, 211, 252],
-                [56, 189, 248],
-              ]}
-              dotSize={5}
-              reverse={false}
-            />
-          </div>
-        )}
-
-        {reverseCanvasVisible && (
-          <div className="absolute inset-0">
-            <CanvasRevealEffect
-              animationSpeed={4}
-              containerClassName="bg-black"
-              colors={[
-                [125, 211, 252],
-                [56, 189, 248],
-              ]}
-              dotSize={5}
-              reverse={true}
-            />
-          </div>
-        )}
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-background to-transparent" />
+  const accessDetails = (
+    <div className="rounded-lg border border-white/[0.11] bg-[#080c0f] px-3.5 py-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-xs font-bold">Acesso demonstrativo</h3>
+        <button
+          type="button"
+          onClick={() => {
+            setEmail(demoCredentials.email);
+            setPassword(demoCredentials.password);
+          }}
+          className="shrink-0 text-[11px] font-bold text-[#20c873] transition hover:text-[#50e596] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873]"
+        >
+          Preencher
+        </button>
       </div>
-
-      {/* Content Layer */}
-      <div className="relative z-10 flex flex-col flex-1">
-        {/* Top header */}
-        <header className="w-full px-6 py-4 lg:px-10 lg:py-6 flex items-center gap-3">
-          <BrandChatIcon className="h-10 w-10" />
-          <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight text-foreground">
-              SISTEMA INTERNO
-            </span>
-            <span className="text-xs text-muted-foreground">WhatsApp Automation</span>
-          </div>
-        </header>
-
-        {/* Main content */}
-        <div className="flex flex-1 flex-col lg:flex-row">
-          {/* Form side */}
-          <div className="flex-1 flex flex-col justify-center items-center px-6 pb-6">
-            <div className="w-full max-w-sm">
-              <AnimatePresence mode="wait">
-                {step === "credentials" ? (
-                  <motion.div
-                    key="credentials-step"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="space-y-5"
-                  >
-                    <div className="space-y-2 text-center lg:text-left">
-                      <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-foreground">
-                        Bem-vindo de volta
-                      </h1>
-                      <p className="text-base text-muted-foreground">
-                        Acesse o painel de automação
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-primary/25 bg-primary/10 px-4 py-2.5 text-sm">
-                      <p className="font-semibold text-foreground">Acesso demonstrativo</p>
-                      <p className="mt-1 text-muted-foreground">
-                        Login: <span className="font-medium text-foreground">user@example.com</span>
-                      </p>
-                      <p className="text-muted-foreground">
-                        Senha: <span className="font-medium text-foreground">password</span>
-                      </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium text-foreground/80">
-                          Email
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="email"
-                            type="email"
-                            autoComplete="username"
-                            placeholder="operador@empresa.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full backdrop-blur-sm text-foreground border border-border bg-card/60 rounded-full py-3 px-5 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="password"
-                          className="text-sm font-medium text-foreground/80"
-                        >
-                          Senha
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="password"
-                            type="password"
-                            autoComplete="current-password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full backdrop-blur-sm text-foreground border border-border bg-card/60 rounded-full py-3 px-5 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
-                            required
-                          />
-                          <button
-                            type="submit"
-                            disabled={loading || !email || !password}
-                            className="absolute right-1.5 top-1.5 text-primary-foreground w-10 h-10 flex items-center justify-center rounded-full disabled:opacity-50 transition-all group overflow-hidden hover:scale-105"
-                            style={{ background: "var(--gradient-primary)" }}
-                          >
-                            {loading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <span className="relative w-full h-full block overflow-hidden">
-                                <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-full">
-                                  →
-                                </span>
-                                <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 -translate-x-full group-hover:translate-x-0">
-                                  →
-                                </span>
-                              </span>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-
-                    <p className="text-xs text-muted-foreground text-center lg:text-left pt-1">
-                      A conta demonstrativa usa somente dados fictícios e não realiza ações reais.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="success-step"
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
-                    className="space-y-6 text-center"
-                  >
-                    <div className="space-y-2">
-                      <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-foreground">
-                        Acesso autorizado
-                      </h1>
-                      <p className="text-base text-muted-foreground">
-                        Redirecionando para o painel...
-                      </p>
-                    </div>
-
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.5 }}
-                      className="py-8"
-                    >
-                      <div
-                        className="mx-auto w-16 h-16 rounded-full flex items-center justify-center"
-                        style={{ background: "var(--gradient-primary)" }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-8 w-8 text-primary-foreground"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </motion.div>
-
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1 }}
-                      onClick={handleBackClick}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Voltar
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Right side: branding (only on large screens) */}
-          <div className="hidden lg:flex flex-1 flex-col justify-center px-12 xl:px-20 -mt-25">
-            <div className="max-w-lg space-y-6">
-              <h2 className="text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-foreground">
-                Automação inteligente de <span className="glow-text text-primary">WhatsApp</span>
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Gerencie suas conversas, contatos e fluxos de atendimento em um só lugar.
-                Performance, segurança e controle total para sua operação.
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {(["email", "password"] as const).map((key) => (
+          <div
+            key={key}
+            className="flex min-w-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.025] px-2.5 py-2"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-white/30">
+                {key === "email" ? "E-mail" : "Senha"}
               </p>
-
-              <div className="grid grid-cols-2 gap-4 pt-6">
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-foreground">99.9%</div>
-                  <div className="text-xs text-muted-foreground">Uptime</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-foreground">24/7</div>
-                  <div className="text-xs text-muted-foreground">Suporte</div>
-                </div>
-              </div>
+              <p className="mt-0.5 truncate text-[10px] font-medium text-white/70">
+                {demoCredentials[key]}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => copyCredential(key)}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-white/38 transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873]"
+              aria-label={`Copiar ${key === "email" ? "e-mail" : "senha"}`}
+            >
+              {copied === key ? (
+                <Check className="h-4 w-4 text-[#20c873]" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </button>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
+
+  return (
+    <main
+      className={cn(
+        "min-h-screen bg-[#070b0d] text-white lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(520px,0.92fr)]",
+        className,
+      )}
+    >
+      <Velaris
+        bg="#020706"
+        colors={["#07130e", "#0b3d29", "#063821", "#000000"]}
+        speed={0.75}
+        grain={0.18}
+        className="hidden border-r border-white/[0.08] lg:block"
+      >
+        <section className="flex h-full px-10 py-9 xl:px-16 xl:py-12">
+          <div className="flex w-full flex-col">
+            <Brand />
+            <div className="my-auto max-w-2xl">
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                className="max-w-xl"
+              >
+                <h1 className="text-[clamp(2.4rem,4vw,4.8rem)] font-extrabold leading-[1.02] tracking-[-0.055em]">
+                  Gerencie conversas, <span className="text-[#20c873]">campanhas e automações</span>{" "}
+                  com eficiência.
+                </h1>
+                <p className="mt-7 max-w-md text-base leading-7 text-white/65 xl:text-lg">
+                  Centralize o atendimento do WhatsApp e mantenha sua operação fluindo em um só
+                  lugar.
+                </p>
+              </motion.div>
+            </div>
+            <SecurityNote className="justify-start" />
+          </div>
+        </section>
+      </Velaris>
+
+      <section className="flex min-h-screen flex-col bg-[#0a0f12] px-6 py-7 sm:px-10 lg:px-14 xl:px-20">
+        <div className="lg:hidden">
+          <Brand />
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="my-auto w-full max-w-[540px] self-center py-6"
+        >
+          <div className="mb-7">
+            <h2 className="text-3xl font-extrabold tracking-[-0.045em] sm:text-[2.6rem]">
+              Entre na sua operação
+            </h2>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
+              Acesso administrativo
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Field label="E-mail">
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-14 w-full rounded-lg border border-white/[0.13] bg-[#080c0f] px-4 text-[15px] text-white outline-none transition placeholder:text-white/25 hover:border-white/25 focus:border-[#20c873] focus:ring-2 focus:ring-[#20c873]/15"
+                placeholder="operador@empresa.com"
+                required
+              />
+            </Field>
+
+            <Field label="Senha">
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="h-14 w-full rounded-lg border border-white/[0.13] bg-[#080c0f] px-4 pr-12 text-[15px] text-white outline-none transition placeholder:text-white/25 hover:border-white/25 focus:border-[#20c873] focus:ring-2 focus:ring-[#20c873]/15"
+                  placeholder="Sua senha"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-md text-white/45 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873]"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </Field>
+
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="group flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#20c873] px-5 text-[15px] font-extrabold text-[#03150b] transition hover:bg-[#2ed981] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f12] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <span>Entrar no painel</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div
+            className="my-5 flex items-center gap-4 text-[10px] text-white/30"
+            aria-hidden="true"
+          >
+            <span className="h-px flex-1 bg-white/[0.09]" />
+            acesso de demonstração
+            <span className="h-px flex-1 bg-white/[0.09]" />
+          </div>
+
+          {accessDetails}
+        </motion.div>
+        <SecurityNote className="lg:hidden" />
+      </section>
+    </main>
+  );
 };
+
+const Brand = () => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#20c873] text-[#03150b] shadow-[0_10px_30px_rgba(32,200,115,0.16)]">
+      <MessageCircleMore className="h-5 w-5" strokeWidth={2.5} />
+    </div>
+    <div>
+      <p className="text-xl font-extrabold tracking-[-0.035em]">
+        Whats<span className="text-[#20c873]">·</span>Ops
+      </p>
+      <p className="mt-0.5 text-xs font-medium tracking-wide text-white/45">
+        Operação de atendimento
+      </p>
+    </div>
+  </div>
+);
+
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-2">
+    <label
+      htmlFor={label === "E-mail" ? "email" : "password"}
+      className="text-sm font-semibold text-white/80"
+    >
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const SecurityNote = ({ className }: { className?: string }) => (
+  <div
+    className={cn(
+      "flex items-center justify-center gap-2 text-[11px] font-medium text-white/30",
+      className,
+    )}
+  >
+    <LockKeyhole className="h-3.5 w-3.5 text-[#20c873]" />
+    Ambiente protegido · Acesso restrito
+  </div>
+);

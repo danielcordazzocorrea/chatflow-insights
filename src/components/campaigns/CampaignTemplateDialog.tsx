@@ -556,7 +556,7 @@ function TemplatePreview({
               {buttons.map((button) => (
                 <div
                   key={button.id}
-                  className="flex items-center justify-center gap-2 border-b border-[#374248] px-3 py-2.5 text-xs font-semibold text-[#53bdeb] last:border-0"
+                  className="flex items-center justify-center gap-2 border-b border-[#374248] px-3 py-2.5 text-xs font-semibold text-[#20c873] last:border-0"
                 >
                   {button.type === "URL" ? (
                     <Link2 className="h-3.5 w-3.5" />

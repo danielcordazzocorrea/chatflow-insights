@@ -122,7 +122,7 @@ export default function Dashboard() {
     { name: "Respondidos", value: stats.responded },
     { name: "Pendentes", value: stats.pending },
   ];
-  const pieColors = ["oklch(0.7 0.18 240)", "oklch(0.62 0.12 220)"];
+  const pieColors = ["#20c873", "#0f9f5b"];
 
   const timeData = useMemo(() => {
     const days: Record<string, { day: string; clientes: number; mensagens: number }> = {};
@@ -160,24 +160,24 @@ export default function Dashboard() {
   );
 
   const metrics = [
-    { label: "Clientes", value: stats.total, icon: Users, accent: "oklch(0.7 0.18 240)" },
+    { label: "Clientes", value: stats.total, icon: Users, accent: "#20c873" },
     {
       label: "Mensagens",
       value: stats.totalMsgs,
       icon: MessageSquare,
-      accent: "oklch(0.7 0.18 240)",
+      accent: "#20c873",
     },
     {
       label: "Respondidos",
       value: stats.responded,
       icon: CheckCircle2,
-      accent: "oklch(0.7 0.18 240)",
+      accent: "#20c873",
     },
     {
       label: "Taxa de Resposta",
       value: `${stats.respondedPct}%`,
       icon: TrendingUp,
-      accent: "oklch(0.7 0.18 240)",
+      accent: "#20c873",
     },
   ];
 
@@ -273,9 +273,9 @@ export default function Dashboard() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: "oklch(0.22 0.045 250)",
+                  background: "#10181a",
                   color: "white",
-                  border: "1px solid oklch(0.4 0.08 245 / .5)",
+                  border: "1px solid rgb(118 148 135 / .35)",
                   borderRadius: 10,
                 }}
               />
