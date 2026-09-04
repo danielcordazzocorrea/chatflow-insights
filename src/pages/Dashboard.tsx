@@ -273,11 +273,14 @@ export default function Dashboard() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: "#10181a",
-                  color: "white",
-                  border: "1px solid rgb(118 148 135 / .35)",
+                  background: "#ffffff",
+                  color: "#111827",
+                  border: "1px solid #e5e7eb",
                   borderRadius: 10,
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.14)",
                 }}
+                labelStyle={{ color: "#111827", fontWeight: 600 }}
+                itemStyle={{ color: "#374151" }}
               />
             </PieChart>
           </ResponsiveContainer>

@@ -3,17 +3,12 @@
   "nodes": [
     {
       "parameters": {
-        "updates": [
-          "messages"
-        ],
+        "updates": ["messages"],
         "options": {}
       },
       "type": "n8n-nodes-base.whatsAppTrigger",
       "typeVersion": 1,
-      "position": [
-        -464,
-        0
-      ],
+      "position": [-464, 0],
       "name": "WhatsApp Trigger"
     },
     {
@@ -70,10 +65,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        -256,
-        0
-      ],
+      "position": [-256, 0],
       "name": "If"
     },
     {
@@ -81,15 +73,12 @@
         "promptType": "define",
         "text": "={{ $('WhatsApp Trigger').item.json.messages[0].text?.body || $('WhatsApp Trigger').item.json.messages[0].button.text }}",
         "options": {
-          "systemMessage": "Você é um assistente virtual da empresa. "
+          "systemMessage": "={{ $('verificar IA global').first().json.system_message || 'Você é um assistente de Daniel Cordazzo.' }}"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [
-        1856,
-        -32
-      ],
+      "position": [1856, -32],
       "name": "AI Agent"
     },
     {
@@ -105,10 +94,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [
-        1856,
-        160
-      ],
+      "position": [1856, 160],
       "name": "OpenAI Chat Model"
     },
     {
@@ -118,10 +104,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
-      "position": [
-        1952,
-        160
-      ],
+      "position": [1952, 160],
       "name": "Postgres Chat Memory"
     },
     {
@@ -151,10 +134,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        1152,
-        0
-      ],
+      "position": [1152, 0],
       "name": "If1"
     },
     {
@@ -191,10 +171,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        -80,
-        16
-      ],
+      "position": [-80, 16],
       "name": "Salvar mensagem cliente"
     },
     {
@@ -212,10 +189,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        944,
-        0
-      ],
+      "position": [944, 0],
       "name": "Buscar cliente",
       "alwaysOutputData": true
     },
@@ -245,10 +219,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        1296,
-        112
-      ],
+      "position": [1296, 112],
       "name": "Criar conversa"
     },
     {
@@ -285,10 +256,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        2432,
-        -32
-      ],
+      "position": [2432, -32],
       "name": "Salvar resposta"
     },
     {
@@ -315,10 +283,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        2704,
-        -32
-      ],
+      "position": [2704, -32],
       "name": "Marcar como respondido"
     },
     {
@@ -334,10 +299,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        2208,
-        -32
-      ],
+      "position": [2208, -32],
       "name": "HTTP Request2"
     },
     {
@@ -375,10 +337,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        1648,
-        -16
-      ],
+      "position": [1648, -16],
       "name": "If2"
     },
     {
@@ -396,10 +355,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        1440,
-        -16
-      ],
+      "position": [1440, -16],
       "name": "verificar IA global",
       "alwaysOutputData": true
     },
@@ -427,10 +383,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        240,
-        -400
-      ],
+      "position": [240, -400],
       "name": "Update a row2"
     },
     {
@@ -448,10 +401,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        16,
-        -400
-      ],
+      "position": [16, -400],
       "name": "Get a row2"
     },
     {
@@ -480,10 +430,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        464,
-        -400
-      ],
+      "position": [464, -400],
       "name": "If7"
     },
     {
@@ -508,10 +455,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        736,
-        -416
-      ],
+      "position": [736, -416],
       "name": "Create a row6"
     },
     {
@@ -545,10 +489,7 @@
       "name": "Marcar resposta por telefone local",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        208,
-        0
-      ],
+      "position": [208, 0],
       "alwaysOutputData": true
     },
     {
@@ -582,10 +523,7 @@
       "name": "Marcar resposta por telefone com DDI",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        432,
-        0
-      ],
+      "position": [432, 0],
       "alwaysOutputData": true
     },
     {
@@ -619,10 +557,7 @@
       "name": "Marcar resposta por BSUID",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        656,
-        0
-      ],
+      "position": [656, 0],
       "alwaysOutputData": true
     }
   ],

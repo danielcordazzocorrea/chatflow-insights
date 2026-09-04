@@ -2,7 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Search, Send, Phone, CheckCheck, Bot, Clock3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ArrowLeft,
+  Search,
+  Send,
+  Phone,
+  CheckCheck,
+  Bot,
+  Clock3,
+  Sparkles,
+  LoaderCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -57,6 +76,9 @@ export default function ChatPage() {
   const [search, setSearch] = useState("");
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [improving, setImproving] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [suggestionOriginal, setSuggestionOriginal] = useState("");
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -310,6 +332,31 @@ export default function ChatPage() {
     setSending(false);
   };
 
+  const improveMessage = async () => {
+    const message = input.trim();
+    if (!message || isDemo || improving) return;
+
+    setImproving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        improvedMessage?: string;
+        error?: string;
+      }>("improve-chat-message", { body: { message } });
+
+      if (error || !data?.improvedMessage) {
+        toast.error(data?.error || error?.message || "Não foi possível melhorar a mensagem");
+        return;
+      }
+
+      setSuggestionOriginal(message);
+      setSuggestion(data.improvedMessage);
+    } catch {
+      toast.error("Não foi possível melhorar a mensagem");
+    } finally {
+      setImproving(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] page-content">
       <div className="chat-shell h-full overflow-hidden flex">
@@ -521,13 +568,29 @@ export default function ChatPage() {
                         ? "Escreva uma mensagem..."
                         : "Envio bloqueado fora da janela de 24 horas"
                     }
-                    disabled={sending || !isMetaWindowOpen}
+                    disabled={sending || improving || !isMetaWindowOpen}
                     autoFocus
                     className="flex-1 bg-background border-border placeholder:text-muted-foreground focus-visible:ring-primary"
                   />
+                  {!isDemo && (
+                    <button
+                      type="button"
+                      onClick={improveMessage}
+                      disabled={sending || improving || !input.trim() || !isMetaWindowOpen}
+                      aria-label="Melhorar mensagem com IA"
+                      title="Melhorar mensagem com IA"
+                      className="rounded-xl border border-primary/30 bg-primary/10 p-2.5 text-primary transition-colors hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {improving ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
                   <button
                     type="submit"
-                    disabled={sending || !input.trim() || !isMetaWindowOpen}
+                    disabled={sending || improving || !input.trim() || !isMetaWindowOpen}
                     aria-label="Enviar mensagem"
                     className="rounded-xl bg-primary p-2.5 text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
@@ -551,6 +614,60 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+      <Dialog
+        open={suggestion !== null}
+        onOpenChange={(open) => {
+          if (!open) setSuggestion(null);
+        }}
+      >
+        <DialogContent className="border-border bg-popover sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Sugestão de melhoria
+            </DialogTitle>
+            <DialogDescription>
+              Compare as versões. Sua mensagem só será alterada se você aceitar a sugestão.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Sua mensagem
+              </p>
+              <div className="max-h-36 overflow-y-auto rounded-xl border bg-muted/35 px-4 py-3 text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                {suggestionOriginal}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Sugestão da IA
+              </p>
+              <div className="max-h-48 overflow-y-auto rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                {suggestion}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => setSuggestion(null)}>
+              Manter original
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (suggestion) setInput(suggestion);
+                setSuggestion(null);
+                toast.success("Sugestão aplicada");
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              Usar sugestão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

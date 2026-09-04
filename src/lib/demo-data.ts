@@ -70,7 +70,44 @@ export const demoMessages = [
   },
 ];
 
-export const demoDateRows = (count: number, spread = 30) =>
-  Array.from({ length: count }, (_, index) => ({
-    created_at: new Date(now - (index % spread) * 86400000 - (index % 12) * 3600000).toISOString(),
-  }));
+export const demoDateRows = (count: number, spread = 30) => {
+  const days = Math.max(1, Math.floor(spread));
+  const today = new Date(now);
+  today.setHours(12, 0, 0, 0);
+
+  // Perfil determinístico com tendência, sazonalidade semanal e picos ocasionais.
+  const weights = Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - 1 - index));
+    const weekendFactor = date.getDay() === 0 || date.getDay() === 6 ? 0.58 : 1;
+    const trend = 0.78 + (index / Math.max(days - 1, 1)) * 0.42;
+    const wave = 1 + Math.sin(index * 1.37 + count * 0.013) * 0.2;
+    const variation = 0.82 + ((index * 17 + count * 7) % 13) / 25;
+    const peak = index === days - 8 || index === days - 3 ? 1.38 : 1;
+    return weekendFactor * trend * wave * variation * peak;
+  });
+
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const exactCounts = weights.map((weight) => (weight / totalWeight) * count);
+  const dailyCounts = exactCounts.map(Math.floor);
+  let remaining = count - dailyCounts.reduce((sum, value) => sum + value, 0);
+
+  exactCounts
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((left, right) => right.fraction - left.fraction)
+    .forEach(({ index }) => {
+      if (remaining > 0) {
+        dailyCounts[index] += 1;
+        remaining -= 1;
+      }
+    });
+
+  return dailyCounts.flatMap((dailyCount, dayIndex) =>
+    Array.from({ length: dailyCount }, (_, itemIndex) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (days - 1 - dayIndex));
+      date.setHours(8 + ((itemIndex * 3 + dayIndex) % 12), (itemIndex * 11) % 60, 0, 0);
+      return { created_at: date.toISOString() };
+    }),
+  );
+};

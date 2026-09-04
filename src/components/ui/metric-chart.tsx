@@ -179,23 +179,20 @@ export function MetricChart({
 
       {activeIndex !== null && activeDate && (
         <div
-          className={`pointer-events-none absolute z-20 min-w-32 rounded-lg border border-primary/25 bg-popover/95 px-3 py-2 text-xs shadow-xl backdrop-blur ${activeIndex >= count - 2 ? "-translate-x-full" : activeIndex <= 1 ? "translate-x-0" : "-translate-x-1/2"}`}
+          className={`pointer-events-none absolute z-20 min-w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-xl ${activeIndex >= count - 2 ? "-translate-x-full" : activeIndex <= 1 ? "translate-x-0" : "-translate-x-1/2"}`}
           style={{
             left: `${(xAt(activeIndex) / WIDTH) * 100}%`,
             top: `${((TOP - 8) / HEIGHT) * 100}%`,
           }}
         >
-          <p className="mb-1.5 font-semibold text-foreground">{dateFormatter(activeDate)}</p>
+          <p className="mb-1.5 font-semibold text-slate-900">{dateFormatter(activeDate)}</p>
           {series.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center justify-between gap-4 text-muted-foreground"
-            >
+            <div key={item.name} className="flex items-center justify-between gap-4 text-slate-600">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
                 {item.name}
               </span>
-              <span className="font-medium text-foreground">
+              <span className="font-medium text-slate-900">
                 {valueFormatter(item.data[activeIndex]?.value ?? 0)}
               </span>
             </div>

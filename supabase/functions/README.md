@@ -1,4 +1,4 @@
-# Campaign Edge Functions
+# Edge Functions
 
 Todos os endpoints aceitam `POST`, exigem o bearer token do usuário autenticado
 e só operam em campanhas cujo `created_by` corresponde a esse usuário.
@@ -81,10 +81,22 @@ supabase secrets set WHATSAPP_BUSINESS_ACCOUNT_ID=...
 supabase secrets set META_APP_ID=...
 supabase secrets set N8N_CAMPAIGN_WEBHOOK_URL=...
 supabase secrets set N8N_CAMPAIGN_WEBHOOK_SECRET=...
+supabase secrets set OPENAI_API_KEY=sk-...
 ```
 
 `WHATSAPP_API_VERSION` é opcional e usa `v23.0` por padrão.
 `N8N_CAMPAIGN_WEBHOOK_SECRET` é obrigatório para disparar campanhas.
+`OPENAI_MODEL` é opcional e usa `gpt-4o-mini` por padrão.
+
+## `improve-chat-message`
+
+Melhora o texto digitado pelo operador antes do envio. A função exige autenticação
+e perfil `owner`; usuários do ambiente demo são recusados no servidor. A chave da
+OpenAI é mantida somente nos secrets do Supabase.
+
+```json
+{ "message": "oi tudo bem queria saber se conseguiu ver" }
+```
 
 ## Deploy
 
@@ -95,4 +107,5 @@ supabase functions deploy add-campaign-contacts
 supabase functions deploy submit-meta-template
 supabase functions deploy upload-meta-template-media
 supabase functions deploy trigger-campaign
+supabase functions deploy improve-chat-message
 ```

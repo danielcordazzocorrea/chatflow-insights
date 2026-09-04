@@ -19,18 +19,21 @@ export type Database = {
           ia_global_ativa: boolean;
           id: string;
           singleton: boolean;
+          system_message: string;
           updated_at: string;
         };
         Insert: {
           ia_global_ativa?: boolean;
           id?: string;
           singleton?: boolean;
+          system_message?: string;
           updated_at?: string;
         };
         Update: {
           ia_global_ativa?: boolean;
           id?: string;
           singleton?: boolean;
+          system_message?: string;
           updated_at?: string;
         };
         Relationships: [];
