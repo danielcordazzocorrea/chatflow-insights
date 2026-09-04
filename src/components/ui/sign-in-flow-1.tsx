@@ -11,7 +11,7 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Velaris from "@/components/ui/velaris";
+import ConstellationGrid from "@/components/ui/constellation-grid";
 
 interface SignInPageProps {
   className?: string;
@@ -91,13 +91,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
         className,
       )}
     >
-      <Velaris
-        bg="#020706"
-        colors={["#07130e", "#0b3d29", "#063821", "#000000"]}
-        speed={0.75}
-        grain={0.18}
-        className="hidden border-r border-white/[0.08] lg:block"
-      >
+      <ConstellationGrid className="hidden border-r border-white/[0.08] lg:block">
         <section className="flex h-full px-10 py-9 xl:px-16 xl:py-12">
           <div className="flex w-full flex-col">
             <Brand />
@@ -121,7 +115,7 @@ export const SignInPage = ({ className, onSubmit, loading = false }: SignInPageP
             <SecurityNote className="justify-start" />
           </div>
         </section>
-      </Velaris>
+      </ConstellationGrid>
 
       <section className="flex min-h-screen flex-col bg-[#0a0f12] px-6 py-7 sm:px-10 lg:px-14 xl:px-20">
         <div className="lg:hidden">
