@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Users, MessageSquare, CheckCircle2, TrendingUp } from "lucide-react";
+import { ContactRound, MessagesSquare, BadgeCheck, Gauge } from "lucide-react";
 import IaGlobalCard from "@/components/IaGlobalCard";
 import ProgressMetricCard, { type MetricSeries } from "@/components/ui/progress-metric-card";
 import { useIsDemo } from "@/contexts/AccessContext";
@@ -52,7 +52,7 @@ export default function Dashboard() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Dashboard — WhatsApp Automation";
+    document.title = "Dashboard WhatsApp Automation";
     const load = async () => {
       setLoadError(null);
       if (isDemo) {
@@ -160,23 +160,23 @@ export default function Dashboard() {
   );
 
   const metrics = [
-    { label: "Clientes", value: stats.total, icon: Users, accent: "#20c873" },
+    { label: "Clientes", value: stats.total, icon: ContactRound, accent: "#20c873" },
     {
       label: "Mensagens",
       value: stats.totalMsgs,
-      icon: MessageSquare,
+      icon: MessagesSquare,
       accent: "#20c873",
     },
     {
       label: "Respondidos",
       value: stats.responded,
-      icon: CheckCircle2,
+      icon: BadgeCheck,
       accent: "#20c873",
     },
     {
       label: "Taxa de Resposta",
       value: `${stats.respondedPct}%`,
-      icon: TrendingUp,
+      icon: Gauge,
       accent: "#20c873",
     },
   ];

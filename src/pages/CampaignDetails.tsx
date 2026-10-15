@@ -3,11 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
-  FileText,
+  LibraryBig,
   Link2,
   Loader2,
   MessageCircle,
-  MessageSquare,
+  MessagesSquare,
+  Megaphone,
   Plus,
   RefreshCw,
   Search,
@@ -180,7 +181,7 @@ export default function CampaignDetails() {
   }, [load]);
 
   useEffect(() => {
-    document.title = campaign ? `${campaign.nome} — Campanhas` : "Campanha — WhatsApp Automation";
+    document.title = campaign ? `${campaign.nome} Campanhas` : "Campanha WhatsApp Automation";
   }, [campaign]);
 
   const stageCounts = useMemo(() => {
@@ -332,7 +333,7 @@ export default function CampaignDetails() {
 
   const metrics = [
     { label: "Contatos", value: contacts.length, icon: Users },
-    { label: "Mensagens", value: messages.length, icon: MessageSquare },
+    { label: "Mensagens", value: messages.length, icon: MessagesSquare },
     { label: linkCampaign ? "Cliques" : "Interações", value: advanced, icon: CheckCircle2 },
     { label: "Conversão", value: `${conversion}%`, icon: TrendingUp },
   ];
@@ -386,10 +387,10 @@ export default function CampaignDetails() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setSendOpen(true)} disabled={isDemo}>
-              <MessageSquare className="mr-2 h-4 w-4" /> Enviar em massa
+              <Megaphone className="mr-2 h-4 w-4" /> Enviar em massa
             </Button>
             <Button variant="outline" onClick={() => setReuseOpen(true)} disabled={isDemo}>
-              <FileText className="mr-2 h-4 w-4" /> Usar template
+              <LibraryBig className="mr-2 h-4 w-4" /> Usar template
             </Button>
             <Button onClick={() => setTemplateOpen(true)} disabled={isDemo}>
               <Plus className="mr-2 h-4 w-4" /> Criar template

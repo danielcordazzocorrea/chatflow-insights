@@ -14,12 +14,13 @@ import {
 import {
   ArrowLeft,
   Search,
-  Send,
+  SendHorizontal,
   Phone,
   CheckCheck,
-  Bot,
+  BotMessageSquare,
   Clock3,
-  Sparkles,
+  WandSparkles,
+  MessagesSquare,
   LoaderCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -83,7 +84,7 @@ export default function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = "Chat — WhatsApp Automation";
+    document.title = "Chat WhatsApp Automation";
     if (isDemo) {
       setClientes(demoClientes);
       setMessages(demoMessages);
@@ -407,7 +408,7 @@ export default function ChatPage() {
                         {c.nome ?? c.telefone ?? "Sem nome"}
                       </p>
                       <div className="flex items-center gap-2 shrink-0">
-                        {c.ia_ativa && <Bot className="h-3.5 w-3.5 text-primary" />}
+                        {c.ia_ativa && <BotMessageSquare className="h-3.5 w-3.5 text-primary" />}
                         {last && (
                           <span className="text-[10px] text-muted-foreground">
                             {new Date(last.created_at).toLocaleTimeString("pt-BR", {
@@ -584,7 +585,7 @@ export default function ChatPage() {
                       {improving ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Sparkles className="h-4 w-4" />
+                        <WandSparkles className="h-4 w-4" />
                       )}
                     </button>
                   )}
@@ -594,7 +595,7 @@ export default function ChatPage() {
                     aria-label="Enviar mensagem"
                     className="rounded-xl bg-primary p-2.5 text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <Send className="h-4 w-4" />
+                    <SendHorizontal className="h-4 w-4" />
                   </button>
                 </form>
               </div>
@@ -603,7 +604,7 @@ export default function ChatPage() {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <div className="empty-state-icon h-20 w-20 mx-auto rounded-2xl flex items-center justify-center mb-4">
-                  <Send className="h-8 w-8" />
+                  <MessagesSquare className="h-8 w-8" />
                 </div>
                 <h3 className="font-semibold text-lg">Selecione uma conversa</h3>
                 <p className="text-sm text-muted-foreground">
@@ -623,7 +624,7 @@ export default function ChatPage() {
         <DialogContent className="border-border bg-popover sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <WandSparkles className="h-5 w-5 text-primary" />
               Sugestão de melhoria
             </DialogTitle>
             <DialogDescription>
@@ -662,7 +663,7 @@ export default function ChatPage() {
                 toast.success("Sugestão aplicada");
               }}
             >
-              <Sparkles className="h-4 w-4" />
+              <WandSparkles className="h-4 w-4" />
               Usar sugestão
             </Button>
           </DialogFooter>

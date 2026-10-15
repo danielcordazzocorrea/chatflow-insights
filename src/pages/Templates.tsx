@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Eye, FileText, Languages, RefreshCw, Send } from "lucide-react";
+import { ScanEye, PanelsTopLeft, Languages, RefreshCw, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,7 +144,7 @@ export default function Templates() {
   }, [visualPreview]);
 
   useEffect(() => {
-    document.title = "Templates — WhatsApp Automation";
+    document.title = "Templates WhatsApp Automation";
     void load();
   }, [load]);
 
@@ -195,7 +195,7 @@ export default function Templates() {
             >
               <div className="flex items-start justify-between gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
-                  <FileText className="h-5 w-5" />
+                  <PanelsTopLeft className="h-5 w-5" />
                 </span>
                 <Badge variant="outline" className={statusClass(template.status)}>
                   {template.status}
@@ -211,11 +211,11 @@ export default function Templates() {
               </div>
               <div className="mt-5 flex items-center justify-between border-t pt-3 text-xs">
                 <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                  <Send className="h-3.5 w-3.5" />
+                  <Megaphone className="h-3.5 w-3.5" />
                   Usado em {template.campanha_templates?.length ?? 0} campanha(s)
                 </span>
                 <span className="inline-flex items-center gap-1 font-semibold text-emerald-300">
-                  <Eye className="h-3.5 w-3.5" /> Ver template
+                  <ScanEye className="h-3.5 w-3.5" /> Ver template
                 </span>
               </div>
             </Card>

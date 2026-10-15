@@ -4,13 +4,13 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  FileText,
+  PanelsTopLeft,
   Link2,
   Loader2,
   MessageCircle,
   Plus,
   RefreshCw,
-  Send,
+  Megaphone,
   Upload,
   Users,
 } from "lucide-react";
@@ -278,7 +278,7 @@ export default function Campaigns() {
   );
 
   useEffect(() => {
-    document.title = "Campanhas — WhatsApp Automation";
+    document.title = "Campanhas WhatsApp Automation";
     void loadCampaigns();
   }, [loadCampaigns]);
 
@@ -343,13 +343,13 @@ export default function Campaigns() {
     {
       label: "Campanhas",
       value: campaigns.length,
-      icon: Send,
+      icon: Megaphone,
       color: "text-emerald-300 bg-emerald-400/10",
     },
     {
       label: "Rascunhos",
       value: campaigns.filter((item) => item.status === "rascunho").length,
-      icon: FileText,
+      icon: PanelsTopLeft,
       color: "text-amber-300 bg-amber-400/10",
     },
     {

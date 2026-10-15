@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Bot, Loader2, Settings2 } from "lucide-react";
+import { BotMessageSquare, Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -126,7 +126,7 @@ export default function IaGlobalCard() {
     <Card className="ai-control p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="flex min-w-0 items-start gap-3">
         <div className="ai-icon h-10 w-10 rounded-xl flex items-center justify-center shrink-0">
-          <Bot className="h-5 w-5" />
+          <BotMessageSquare className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <h3 className="font-semibold">Automação de IA</h3>
