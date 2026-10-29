@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Search,
   TrendingUp,
+  Upload,
   Users,
 } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -25,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -139,6 +141,9 @@ export default function CampaignDetails() {
   const [loading, setLoading] = useState(!visualPreview);
   const [notFound, setNotFound] = useState(false);
   const [search, setSearch] = useState("");
+  const [contactsOpen, setContactsOpen] = useState(false);
+  const [contactText, setContactText] = useState("");
+  const [addingContacts, setAddingContacts] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [reuseOpen, setReuseOpen] = useState(false);
   const [libraryTemplates, setLibraryTemplates] = useState<LibraryTemplate[]>([]);
@@ -276,6 +281,54 @@ export default function CampaignDetails() {
     await load();
   };
 
+  const addContacts = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!campaign || isDemo) return;
+    const lines = contactText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length < 1 || lines.length > 1000) {
+      toast.error("Informe entre 1 e 1.000 contatos por vez");
+      return;
+    }
+    const parsed = lines.map((line) => {
+      const parts = line.split(/[;\t]/).map((part) => part.trim());
+      return parts.length === 1 ? { telefone: parts[0] } : { nome: parts[0], telefone: parts[1] };
+    });
+    const invalidLine = parsed.findIndex((contact, index) => {
+      const parts = lines[index].split(/[;\t]/);
+      const digits = contact.telefone.replace(/\D/g, "");
+      return parts.length > 2 || digits.length < 10 || digits.length > 15;
+    });
+    if (invalidLine !== -1) {
+      toast.error(`Linha ${invalidLine + 1} inválida`, {
+        description: "Use nome;telefone ou apenas telefone, com 10 a 15 dígitos.",
+      });
+      return;
+    }
+    setAddingContacts(true);
+    const { error } = await supabase.functions.invoke("add-campaign-contacts", {
+      body: { campanha_id: campaign.id, contatos: parsed },
+    });
+    setAddingContacts(false);
+    if (error) {
+      let description = error.message;
+      if ("context" in error && error.context instanceof Response) {
+        const body = await error.context.json().catch(() => null);
+        if (body && typeof body === "object" && "error" in body && typeof body.error === "string") {
+          description = body.error;
+        }
+      }
+      toast.error("Não foi possível adicionar contatos", { description });
+      return;
+    }
+    toast.success(`${parsed.length} contato(s) adicionado(s)`);
+    setContactText("");
+    setContactsOpen(false);
+    await load();
+  };
+
   const sendCampaign = async () => {
     if (!campaign || !sendTemplateId) return;
     setSending(true);
@@ -386,6 +439,9 @@ export default function CampaignDetails() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setContactsOpen(true)} disabled={isDemo}>
+              <Upload className="mr-2 h-4 w-4" /> Adicionar contatos
+            </Button>
             <Button variant="outline" onClick={() => setSendOpen(true)} disabled={isDemo}>
               <Megaphone className="mr-2 h-4 w-4" /> Enviar em massa
             </Button>
@@ -537,6 +593,35 @@ export default function CampaignDetails() {
               Usar nesta campanha
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={contactsOpen} onOpenChange={setContactsOpen}>
+        <DialogContent className="border-border bg-popover">
+          <form onSubmit={(event) => void addContacts(event)}>
+            <DialogHeader>
+              <DialogTitle>Adicionar contatos a {campaign?.nome}</DialogTitle>
+              <DialogDescription>
+                Cole até 1.000 contatos, um por linha, no formato nome;telefone ou apenas telefone.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              className="my-5 min-h-56 font-mono text-xs"
+              placeholder={"Ana;+5511999999999\nBruno;+5511888888888"}
+              value={contactText}
+              onChange={(event) => setContactText(event.target.value)}
+              required
+            />
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setContactsOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={addingContacts}>
+                {addingContacts && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Adicionar contatos
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
