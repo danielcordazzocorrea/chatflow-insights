@@ -287,3 +287,500 @@
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* Product surfaces: a restrained glass system shared by every protected route. */
+.app-shell {
+  --background: #0b1014;
+  --foreground: #f5f7f8;
+  --card: #151d22;
+  --card-foreground: #f5f7f8;
+  --popover: #1b2429;
+  --popover-foreground: #f5f7f8;
+  --primary: #36d991;
+  --primary-foreground: #062016;
+  --secondary: #1c272b;
+  --secondary-foreground: #f5f7f8;
+  --muted: #1c292b;
+  --muted-foreground: #a0afb7;
+  --accent: #1e3d32;
+  --accent-foreground: #e7fff2;
+  --success: #36d991;
+  --border: rgb(193 222 228 / 0.12);
+  --input: #1a2428;
+  --ring: #52df9e;
+  background: #0b1014;
+}
+
+.app-shell .app-header {
+  position: relative;
+  background: linear-gradient(180deg, #141d22 0%, #10171b 100%);
+  border-bottom: 1px solid rgb(218 244 247 / 0.1);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.05),
+    0 14px 32px -26px #000;
+}
+
+.app-shell .page-content,
+.app-shell .chat-shell,
+.app-shell .chat-messages {
+  background:
+    radial-gradient(ellipse 85% 45% at 50% -20%, rgb(49 91 90 / 0.12), transparent), #0b1014;
+}
+
+.app-shell .page-content h1 {
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 1.12;
+}
+
+.app-shell .control-card,
+.app-shell .metric-card,
+.app-shell .ai-control,
+.app-shell .glass-panel {
+  background: linear-gradient(160deg, rgb(35 48 55 / 0.88), rgb(19 28 33 / 0.95) 62%);
+  border: 1px solid rgb(206 235 240 / 0.12);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.065),
+    0 12px 35px -28px #000;
+  border-radius: 20px;
+}
+
+.app-shell .control-card:hover,
+.app-shell .metric-card:hover {
+  border-color: rgb(162 225 207 / 0.24);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.09),
+    0 20px 38px -30px #000;
+}
+
+.spotlight-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    340px circle at var(--spot-x) var(--spot-y),
+    rgb(129 214 192 / 0.13),
+    transparent 72%
+  );
+  transition: opacity 220ms ease;
+}
+
+.spotlight-card:hover::before,
+.spotlight-card:focus-within::before {
+  opacity: 1;
+}
+
+.app-shell .metric-card {
+  min-height: 146px;
+}
+
+.dashboard-ai .ai-control {
+  margin-bottom: 0;
+  min-height: 78px;
+  padding: 14px 16px;
+  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+}
+
+.dashboard-ai .ai-control .status-label {
+  display: none;
+}
+.dashboard-ai .ai-control > div:nth-child(2) {
+  margin-left: auto;
+}
+.dashboard-ai .ai-control .ai-icon {
+  width: 38px;
+  height: 38px;
+}
+.dashboard-ai .ai-control h3 {
+  font-size: 13px;
+}
+.dashboard-ai .ai-control p {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.app-shell .metric-icon,
+.app-shell .ai-icon,
+.app-shell .empty-state-icon {
+  background: rgb(129 214 192 / 0.1);
+  border: 1px solid rgb(198 235 226 / 0.1);
+  border-radius: 14px;
+}
+
+.app-shell .status-label {
+  background: rgb(32 48 50 / 0.72);
+  border-color: rgb(193 222 228 / 0.13);
+  color: #bdccc8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell .conversation-rail {
+  background: #11191d;
+  border-color: rgb(193 222 228 / 0.1);
+}
+
+.app-shell .conversation-active {
+  background: rgb(54 217 145 / 0.11);
+  box-shadow: inset 3px 0 0 #36d991;
+}
+
+.app-shell .contact-avatar {
+  background: #233d36;
+  color: #a5f2c9;
+}
+
+.app-shell .operator-message {
+  background: #196c4f;
+}
+
+.app-shell button,
+.app-shell input,
+.app-shell textarea,
+.app-shell select {
+  font-family: inherit;
+}
+
+@media (max-width: 700px) {
+  .app-shell .app-header {
+    min-height: 70px;
+  }
+  .app-shell .page-content {
+    height: calc(100vh - 70px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-card::before {
+    transition: none;
+  }
+}
+
+/* Light product theme. Login retains its structure and uses the same palette. */
+:root,
+.app-shell {
+  --background: #f5f7f8;
+  --foreground: #172126;
+  --card: #ffffff;
+  --card-foreground: #172126;
+  --popover: #ffffff;
+  --popover-foreground: #172126;
+  --primary: #128a53;
+  --primary-foreground: #ffffff;
+  --primary-glow: #24b46f;
+  --secondary: #edf2f2;
+  --secondary-foreground: #172126;
+  --muted: #edf2f3;
+  --muted-foreground: #687b86;
+  --accent: #e5f4eb;
+  --accent-foreground: #0f5d3b;
+  --success: #14995d;
+  --success-foreground: #ffffff;
+  --border: rgb(51 83 91 / 0.15);
+  --input: #f5f8f8;
+  --ring: #128a53;
+  --chart-1: #14995d;
+  --chart-2: #5eb994;
+  --chart-3: #697d8a;
+  --chart-4: #9bcdb4;
+  --chart-5: #d2e6db;
+  --gradient-primary: linear-gradient(135deg, #128a53, #19a768);
+  --gradient-surface: linear-gradient(180deg, #ffffff, #f9fbfb);
+  --gradient-glow: radial-gradient(circle at 50% 0%, rgb(18 138 83 / 0.09), transparent 60%);
+  --shadow-glow: 0 12px 30px -22px rgb(18 138 83 / 0.35);
+  --shadow-elegant: 0 12px 32px -26px rgb(22 45 53 / 0.32);
+}
+
+body {
+  background: #f5f7f8;
+  background-image: none;
+}
+
+.app-shell {
+  background: #f5f7f8;
+  color: #172126;
+}
+
+::selection {
+  background: rgb(18 138 83 / 0.17);
+}
+
+.app-shell .app-header {
+  background: rgb(255 255 255 / 0.88);
+  border-bottom-color: rgb(38 72 80 / 0.11);
+  box-shadow: 0 8px 26px -24px rgb(29 57 65 / 0.35);
+  backdrop-filter: blur(18px);
+}
+
+.app-shell .page-content,
+.app-shell .chat-shell,
+.app-shell .chat-messages {
+  background:
+    radial-gradient(ellipse 85% 45% at 50% -20%, rgb(211 232 228 / 0.46), transparent), #f5f7f8;
+}
+
+.app-shell .control-card,
+.app-shell .metric-card,
+.app-shell .ai-control,
+.app-shell .glass-panel {
+  background: linear-gradient(165deg, #fff, #fbfcfc);
+  border-color: rgb(58 91 99 / 0.12);
+  box-shadow:
+    0 14px 30px -26px rgb(31 61 69 / 0.31),
+    inset 0 1px #fff;
+}
+
+.app-shell .control-card:hover,
+.app-shell .metric-card:hover {
+  border-color: rgb(30 141 90 / 0.28);
+  box-shadow: 0 18px 34px -26px rgb(31 61 69 / 0.38);
+}
+
+.spotlight-card::before {
+  background: radial-gradient(
+    340px circle at var(--spot-x) var(--spot-y),
+    rgb(46 177 113 / 0.085),
+    transparent 72%
+  );
+}
+
+.app-shell .metric-icon,
+.app-shell .ai-icon,
+.app-shell .empty-state-icon {
+  background: #eaf6ef !important;
+  border-color: #d8eddf;
+  color: #128a53 !important;
+}
+
+.app-shell .status-label {
+  background: #f1f7f4;
+  border-color: #d6e9dd;
+  color: #247249;
+}
+
+.app-shell .conversation-rail {
+  background: #fff;
+  border-color: var(--border);
+}
+.app-shell .conversation-active {
+  background: #e8f6ee;
+  box-shadow: inset 3px 0 0 #15965b;
+}
+.app-shell .contact-avatar {
+  background: #e8f4ed;
+  color: #128a53;
+}
+.app-shell .operator-message {
+  background: #168553;
+  color: #fff;
+}
+.app-shell .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cad9d3;
+}
+
+.app-shell .text-emerald-300,
+.app-shell .text-green-300 {
+  color: #087548;
+}
+.app-shell .text-amber-300 {
+  color: #976400;
+}
+.app-shell .text-slate-300 {
+  color: #50606c;
+}
+
+.auth-light {
+  color: #172126;
+}
+.auth-light h1,
+.auth-light h2 {
+  color: #172126;
+}
+
+/* Softer light palette with stronger separation and legible secondary text. */
+:root,
+.app-shell {
+  --background: #dce5e7;
+  --foreground: #142027;
+  --card: #eef4f1;
+  --card-foreground: #142027;
+  --popover: #f1f6f4;
+  --popover-foreground: #142027;
+  --primary: #08794a;
+  --secondary: #dce6e7;
+  --secondary-foreground: #142027;
+  --muted: #dce6e7;
+  --muted-foreground: #455b65;
+  --border: rgb(46 73 82 / 0.25);
+  --input: #e4ece9;
+  --ring: #08794a;
+}
+
+body,
+.app-shell {
+  background: #dce5e7;
+  color: #142027;
+}
+
+.app-shell .app-header {
+  background: rgb(232 239 237 / 0.96);
+  border-bottom-color: rgb(38 72 80 / 0.21);
+  box-shadow: 0 8px 26px -24px rgb(29 57 65 / 0.48);
+}
+
+.app-shell .page-content,
+.app-shell .chat-shell,
+.app-shell .chat-messages {
+  background:
+    radial-gradient(ellipse 85% 45% at 50% -20%, rgb(214 232 226 / 0.34), transparent), #dce5e7;
+}
+
+.app-shell .control-card,
+.app-shell .metric-card,
+.app-shell .ai-control,
+.app-shell .glass-panel {
+  background: linear-gradient(165deg, #f0f5f3, #e9f1ee);
+  border-color: rgb(58 91 99 / 0.22);
+  box-shadow:
+    0 14px 30px -24px rgb(31 61 69 / 0.34),
+    inset 0 1px #fff;
+}
+
+.app-shell .control-card:hover,
+.app-shell .metric-card:hover {
+  border-color: rgb(18 125 76 / 0.42);
+  box-shadow: 0 18px 34px -24px rgb(31 61 69 / 0.42);
+}
+
+.app-shell .conversation-rail {
+  background: #eaf1ef;
+  border-color: var(--border);
+}
+.app-shell .text-slate-400 {
+  color: #536671;
+}
+.app-shell .text-slate-500 {
+  color: #4c606b;
+}
+
+.auth-light {
+  color: #142027;
+  background: #dce5e7;
+}
+.auth-light h1,
+.auth-light h2 {
+  color: #142027;
+}
+.auth-light > section {
+  background: #e9f0ed;
+}
+.auth-light input {
+  background: #e1eae7;
+  border-color: #a9bfc0;
+  color: #142027;
+}
+.auth-light h1 span {
+  color: #08794a;
+}
+.auth-light p {
+  color: #405761;
+}
+
+/* Quiet route tabs in place of the animated liquid navigation. */
+.app-route-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  height: 75px;
+  min-width: 0;
+}
+
+.app-route-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 96px;
+  padding: 0 14px;
+  border-radius: 12px 12px 0 0;
+  color: #405761;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+.app-route-link::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 0;
+  left: 16px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: #08794a;
+  box-shadow: 0 -3px 12px rgb(8 121 74 / 0.18);
+  transform: scaleX(0);
+  transition: transform 220ms ease;
+}
+
+.app-route-link:hover {
+  background: rgb(255 255 255 / 0.32);
+  color: #142027;
+}
+
+.app-route-link.is-active {
+  background: linear-gradient(180deg, transparent 24%, rgb(8 121 74 / 0.08));
+  color: #086d43;
+}
+
+.app-route-link.is-active::after {
+  transform: scaleX(1);
+}
+.app-route-link:focus-visible {
+  outline: 2px solid #08794a;
+  outline-offset: -5px;
+}
+
+@media (max-width: 700px) {
+  .app-route-nav {
+    height: 69px;
+    gap: 2px;
+  }
+  .app-route-link {
+    min-width: 44px;
+    padding: 0 10px;
+  }
+  .app-route-label {
+    display: none;
+  }
+  .app-route-link::after {
+    right: 11px;
+    left: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-route-link,
+  .app-route-link::after {
+    transition: none;
+  }
+}

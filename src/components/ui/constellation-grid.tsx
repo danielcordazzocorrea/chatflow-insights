@@ -115,7 +115,7 @@ export default function ConstellationGrid({
       pointer.previousY = pointer.y;
       const speed = Math.hypot(pointer.vx, pointer.vy);
 
-      ctx.fillStyle = "#020706";
+      ctx.fillStyle = "#d2e1db";
       ctx.fillRect(0, 0, width, height);
 
       const spring = 18;
@@ -157,9 +157,9 @@ export default function ConstellationGrid({
           const distanceSquared = dx * dx + dy * dy;
 
           if (distanceSquared < connectionDistanceSquared) {
-            const alpha = (1 - Math.sqrt(distanceSquared) / connectionDistance) * 0.15;
-            ctx.strokeStyle = `rgba(130, 229, 178, ${alpha})`;
-            ctx.lineWidth = 0.7;
+            const alpha = (1 - Math.sqrt(distanceSquared) / connectionDistance) * 0.34;
+            ctx.strokeStyle = `rgba(23, 111, 76, ${alpha})`;
+            ctx.lineWidth = 0.9;
             ctx.beginPath();
             ctx.moveTo(node.x, node.y);
             ctx.lineTo(other.x, other.y);
@@ -171,8 +171,8 @@ export default function ConstellationGrid({
       for (const node of nodes) {
         const distance = Math.hypot(pointer.x - node.x, pointer.y - node.y);
         const isNear = distance < pointer.radius;
-        const alpha = isNear ? 0.92 : 0.24 + Math.sin(node.pulse) * 0.08;
-        ctx.fillStyle = isNear ? `rgba(32, 200, 115, ${alpha})` : `rgba(210, 242, 225, ${alpha})`;
+        const alpha = isNear ? 0.95 : 0.48 + Math.sin(node.pulse) * 0.08;
+        ctx.fillStyle = isNear ? `rgba(13, 112, 67, ${alpha})` : `rgba(34, 111, 78, ${alpha})`;
         const radius = isNear ? node.radius * 2.1 : node.radius + Math.sin(node.pulse) * 0.25;
 
         ctx.beginPath();
@@ -181,13 +181,13 @@ export default function ConstellationGrid({
 
         if (!reduceMotion && distance < 86) {
           const ring = ((node.pulse * 18) % 28) + 4;
-          ctx.strokeStyle = `rgba(32, 200, 115, ${(1 - ring / 32) * 0.36})`;
+          ctx.strokeStyle = `rgba(17, 131, 77, ${(1 - ring / 32) * 0.3})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(node.x, node.y, ring, 0, Math.PI * 2);
           ctx.stroke();
           ctx.font = "8px ui-monospace, SFMono-Regular, Consolas, monospace";
-          ctx.fillStyle = "rgba(80, 229, 150, 0.78)";
+          ctx.fillStyle = "rgba(17, 131, 77, 0.7)";
           ctx.fillText(node.label, node.x + 10, node.y - 10);
         }
       }
@@ -213,13 +213,13 @@ export default function ConstellationGrid({
   return (
     <div
       ref={hostRef}
-      className={cn("relative h-full w-full overflow-hidden bg-[#020706]", className)}
+      className={cn("relative h-full w-full overflow-hidden bg-[#d2e1db]", className)}
       {...props}
     >
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 block h-full w-full" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_46%,transparent_0%,rgba(2,7,6,0.14)_38%,rgba(2,7,6,0.78)_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_46%,transparent_0%,rgba(210,225,219,0.1)_38%,rgba(210,225,219,0.48)_100%)]"
       />
       {children ? <div className="relative z-10 h-full w-full">{children}</div> : null}
     </div>

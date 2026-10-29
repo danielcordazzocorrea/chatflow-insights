@@ -9,14 +9,14 @@ export type ChartSeries = { name: string; data: SeriesPoint[]; color: string };
 
 // Shared by the card so labels and chart always use the same palette.
 export const ACCENTS = {
-  sky: { stroke: "#20c873", text: "#86efac" },
-  emerald: { stroke: "#34d399", text: "#6ee7b7" },
-  rose: { stroke: "#fb7185", text: "#fda4af" },
-  neutral: { stroke: "#94a3b8", text: "#cbd5e1" },
+  sky: { stroke: "#15965b", text: "#128a53" },
+  emerald: { stroke: "#20a96d", text: "#128a53" },
+  rose: { stroke: "#d85e70", text: "#b94055" },
+  neutral: { stroke: "#82939d", text: "#586b75" },
 } satisfies Record<MetricAccent, { stroke: string; text: string }>;
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const SERIES_COLORS = ["#20c873", "#50e596", "#0f9f5b", "#86efac"];
+export const SERIES_COLORS = ["#15965b", "#8da2ad", "#0f8151", "#b2c4bd"];
 // eslint-disable-next-line react-refresh/only-export-components
 export const formatCompact = (value: number) =>
   Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 }).format(value);
@@ -179,7 +179,7 @@ export function MetricChart({
 
       {activeIndex !== null && activeDate && (
         <div
-          className={`pointer-events-none absolute z-20 min-w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-xl ${activeIndex >= count - 2 ? "-translate-x-full" : activeIndex <= 1 ? "translate-x-0" : "-translate-x-1/2"}`}
+          className={`pointer-events-none absolute z-20 min-w-32 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs text-slate-700 shadow-xl backdrop-blur-xl ${activeIndex >= count - 2 ? "-translate-x-full" : activeIndex <= 1 ? "translate-x-0" : "-translate-x-1/2"}`}
           style={{
             left: `${(xAt(activeIndex) / WIDTH) * 100}%`,
             top: `${((TOP - 8) / HEIGHT) * 100}%`,

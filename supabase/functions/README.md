@@ -31,6 +31,18 @@ Cria a campanha no banco, sempre com status inicial `rascunho`.
 
 Aceita até 1.000 contatos por requisição. Cada contato começa em `etapa = 0`.
 
+## `delete-customer`
+
+Exclui permanentemente um cliente, suas mensagens, contatos nas campanhas e a
+etapa manual do pipeline. Exige sessão de `owner` e confirmação explícita no corpo.
+
+```json
+{ "source": "client", "id": "uuid-do-cliente", "confirm": true }
+```
+
+Para um contato exibido no chat apenas por uma campanha, use
+`"source": "campaign_contact"` e o ID numérico do contato.
+
 ## `submit-meta-template`
 
 Submete um modelo à Meta e, se aceito, salva o modelo e seu status na campanha.
@@ -104,6 +116,7 @@ OpenAI é mantida somente nos secrets do Supabase.
 supabase db push
 supabase functions deploy create-campaign
 supabase functions deploy add-campaign-contacts
+supabase functions deploy delete-customer
 supabase functions deploy submit-meta-template
 supabase functions deploy upload-meta-template-media
 supabase functions deploy trigger-campaign

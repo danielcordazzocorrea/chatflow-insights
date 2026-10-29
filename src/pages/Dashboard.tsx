@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import SpotlightCard from "@/components/ui/spotlight-card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { ContactRound, MessagesSquare, BadgeCheck, Gauge } from "lucide-react";
 import IaGlobalCard from "@/components/IaGlobalCard";
+import LeadPipeline from "@/components/LeadPipeline";
 import ProgressMetricCard, { type MetricSeries } from "@/components/ui/progress-metric-card";
 import { useIsDemo } from "@/contexts/AccessContext";
 import { demoDateRows } from "@/lib/demo-data";
@@ -122,7 +123,7 @@ export default function Dashboard() {
     { name: "Respondidos", value: stats.responded },
     { name: "Pendentes", value: stats.pending },
   ];
-  const pieColors = ["#20c873", "#0f9f5b"];
+  const pieColors = ["#16a365", "#cbd7dc"];
 
   const timeData = useMemo(() => {
     const days: Record<string, { day: string; clientes: number; mensagens: number }> = {};
@@ -182,8 +183,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="page-content h-[calc(100vh-4rem)] overflow-x-hidden overflow-y-auto scrollbar-thin p-5 sm:p-8 lg:p-9">
-      <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
+    <div className="page-content dashboard-page h-[calc(100vh-76px)] overflow-x-hidden overflow-y-auto scrollbar-thin p-5 sm:p-8 lg:p-9">
+      <header className="mb-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] lg:items-center">
         <div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-[-0.04em]">
             Dashboard de Operações
@@ -192,13 +193,10 @@ export default function Dashboard() {
             Métricas em tempo real do canal WhatsApp
           </p>
         </div>
-        <div className="status-label">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-2" />
-          Sistema online
+        <div className="dashboard-ai">
+          <IaGlobalCard />
         </div>
       </header>
-
-      <IaGlobalCard />
 
       {loadError && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
@@ -217,7 +215,7 @@ export default function Dashboard() {
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
-            <Card key={m.label} className="metric-card p-5 lg:p-6">
+            <SpotlightCard key={m.label} className="metric-card p-5 lg:p-6">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-xs font-semibold text-muted-foreground">{m.label}</span>
                 <span
@@ -230,12 +228,12 @@ export default function Dashboard() {
               <div className="text-3xl font-bold tracking-[-0.04em] tabular-nums relative">
                 {loading ? "—" : m.value}
               </div>
-            </Card>
+            </SpotlightCard>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ProgressMetricCard
           title="Clientes e mensagens"
           total={stats.totalMsgs}
@@ -250,10 +248,10 @@ export default function Dashboard() {
             { label: "Últimos 14 dias", points: 14 },
             { label: "Últimos 30 dias", points: 30 },
           ]}
-          className="lg:col-span-3"
+          className="lg:col-span-2"
         />
 
-        <Card className="control-card p-6">
+        <SpotlightCard className="control-card p-6">
           <h3 className="font-semibold mb-1">Status de respostas</h3>
           <p className="text-xs text-muted-foreground mb-4">Distribuição dos clientes</p>
           <ResponsiveContainer width="100%" height={220}>
@@ -295,8 +293,9 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </Card>
+        </SpotlightCard>
       </div>
+      <LeadPipeline />
     </div>
   );
 }

@@ -68,6 +68,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      lead_pipelines: {
+        Row: {
+          id: string;
+          owner_id: string;
+          name: string;
+          created_at: string;
+          initial_stage_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          name: string;
+          created_at?: string;
+          initial_stage_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          name?: string;
+          created_at?: string;
+          initial_stage_id?: string | null;
+        };
+        Relationships: [];
+      };
+      lead_pipeline_stages: {
+        Row: {
+          id: string;
+          pipeline_id: string;
+          name: string;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          pipeline_id: string;
+          name: string;
+          position: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          pipeline_id?: string;
+          name?: string;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      lead_pipeline_assignments: {
+        Row: { pipeline_id: string; lead_key: string; stage_id: string; updated_at: string };
+        Insert: { pipeline_id: string; lead_key: string; stage_id: string; updated_at?: string };
+        Update: { pipeline_id?: string; lead_key?: string; stage_id?: string; updated_at?: string };
+        Relationships: [];
+      };
       campanhas: {
         Row: {
           created_at: string;
@@ -264,7 +318,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_lead_pipeline_with_stage: {
+        Args: { p_name: string; p_initial_stage_name: string };
+        Returns: string;
+      };
+      delete_lead_pipeline_stage: {
+        Args: { p_stage_id: string; p_replacement_stage_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       campanha_status:
