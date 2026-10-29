@@ -317,7 +317,7 @@ export default function CampaignDetails() {
 
   if (notFound) {
     return (
-      <div className="page-content flex h-[calc(100vh-4rem)] items-center justify-center p-6">
+      <div className="page-content flex h-[calc(100vh-76px)] items-center justify-center p-6">
         <Card className="control-card max-w-md p-8 text-center">
           <h1 className="text-xl font-bold">Campanha não encontrada</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -339,7 +339,7 @@ export default function CampaignDetails() {
   ];
 
   return (
-    <div className="page-content h-[calc(100vh-4rem)] w-screen max-w-full overflow-x-hidden overflow-y-auto p-4 scrollbar-thin sm:p-6 lg:p-8">
+    <div className="page-content h-[calc(100vh-76px)] w-screen max-w-full overflow-x-hidden overflow-y-auto p-4 scrollbar-thin sm:p-6 lg:p-8">
       <div className="mx-auto w-full min-w-0 max-w-[1600px]">
         <Link
           to="/campanhas"

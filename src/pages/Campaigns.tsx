@@ -447,7 +447,7 @@ export default function Campaigns() {
   };
 
   return (
-    <div className="page-content scrollbar-hidden h-[calc(100vh-4rem)] overflow-y-auto p-4 sm:p-5 lg:p-6">
+    <div className="page-content scrollbar-hidden h-[calc(100vh-76px)] overflow-y-auto p-4 sm:p-5 lg:p-6">
       <div className="mx-auto max-w-[1600px]">
         <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <div>

@@ -22,6 +22,7 @@ import {
   WandSparkles,
   MessagesSquare,
   LoaderCircle,
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -53,7 +54,7 @@ const META_SERVICE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const canonicalPhone = (value: string | null | undefined) => {
   const digits = value?.replace(/\D/g, "") ?? "";
   if (!digits) return "";
-  return digits.startsWith("55") ? digits : `55${digits}`;
+  return [10, 11].includes(digits.length) ? `55${digits}` : digits;
 };
 
 const messageStatusLabel = (status: string | null) => {
@@ -78,6 +79,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [improving, setImproving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [suggestionOriginal, setSuggestionOriginal] = useState("");
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -358,8 +361,61 @@ export default function ChatPage() {
     }
   };
 
+  const deleteClient = async () => {
+    if (!deleteTarget || isDemo || deleting) return;
+    setDeleting(true);
+    try {
+      const campaignContact = deleteTarget.id.startsWith("campaign-");
+      const { error } = await supabase.functions.invoke("delete-customer", {
+        body: {
+          source: campaignContact ? "campaign_contact" : "client",
+          id: campaignContact ? deleteTarget.id.slice("campaign-".length) : deleteTarget.id,
+          confirm: true,
+        },
+      });
+      if (error) {
+        let message = error.message;
+        if ("context" in error && error.context instanceof Response) {
+          const body = await error.context.json().catch(() => null);
+          if (
+            body &&
+            typeof body === "object" &&
+            "error" in body &&
+            typeof body.error === "string"
+          ) {
+            message = body.error;
+          }
+        }
+        throw new Error(message);
+      }
+      const phone = canonicalPhone(deleteTarget.telefone);
+      setClientes((current) =>
+        current.filter(
+          (client) =>
+            client.id !== deleteTarget.id &&
+            (phone
+              ? canonicalPhone(client.telefone) !== phone
+              : client.bsuid !== deleteTarget.bsuid),
+        ),
+      );
+      if (phone)
+        setMessages((current) =>
+          current.filter((message) => canonicalPhone(message.telefone) !== phone),
+        );
+      if (phone && canonicalPhone(activePhone) === phone) setActivePhone(null);
+      setDeleteTarget(null);
+      toast.success("Cliente excluído");
+    } catch (cause) {
+      toast.error("Não foi possível excluir o cliente", {
+        description: cause instanceof Error ? cause.message : String(cause),
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-4rem)] page-content">
+    <div className="h-[calc(100vh-76px)] page-content">
       <div className="chat-shell h-full overflow-hidden flex">
         <div
           className={cn(
@@ -388,63 +444,76 @@ export default function ChatPage() {
             )}
             {filteredClientes.map((c) => {
               const last = c.telefone ? lastMsgByPhone.get(canonicalPhone(c.telefone)) : null;
-              const active = canonicalPhone(c.telefone) === canonicalPhone(activePhone);
+              const active =
+                Boolean(c.telefone) && canonicalPhone(c.telefone) === canonicalPhone(activePhone);
               const responded = c.responded === "true";
               return (
-                <button
-                  key={c.id}
-                  onClick={() => setActivePhone(c.telefone)}
-                  className={cn(
-                    "relative w-full p-4 flex items-start gap-3 border-b text-left transition-colors",
-                    active ? "conversation-active" : "hover:bg-muted/45",
-                  )}
-                >
-                  <div className="contact-avatar h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0">
-                    {(c.nome ?? c.telefone ?? "?").slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-sm truncate">
-                        {c.nome ?? c.telefone ?? "Sem nome"}
-                      </p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {c.ia_ativa && <BotMessageSquare className="h-3.5 w-3.5 text-primary" />}
-                        {last && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(last.created_at).toLocaleTimeString("pt-BR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
+                <div key={c.id} className="relative border-b">
+                  <button
+                    type="button"
+                    onClick={() => setActivePhone(c.telefone)}
+                    className={cn(
+                      "w-full p-4 pr-12 flex items-start gap-3 text-left transition-colors",
+                      active ? "conversation-active" : "hover:bg-muted/45",
+                    )}
+                  >
+                    <div className="contact-avatar h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0">
+                      {(c.nome ?? c.telefone ?? "?").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-sm truncate">
+                          {c.nome ?? c.telefone ?? "Sem nome"}
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {c.ia_ativa && <BotMessageSquare className="h-3.5 w-3.5 text-primary" />}
+                          {last && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(last.created_at).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground truncate">
+                          {last ? messageText(last, c.nome) : (c.telefone ?? "—")}
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <label
+                            className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Switch
+                              checked={c.ia_ativa}
+                              onCheckedChange={() => {}}
+                              onClick={(e) => toggleIa(c, e as unknown as React.MouseEvent)}
+                              className="data-[state=checked]:bg-primary"
+                            />
+                            IA
+                          </label>
+                          {responded ? (
+                            <CheckCheck className="h-3.5 w-3.5 text-success" />
+                          ) : (
+                            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-muted-foreground truncate">
-                        {last ? messageText(last, c.nome) : (c.telefone ?? "—")}
-                      </p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <label
-                          className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Switch
-                            checked={c.ia_ativa}
-                            onCheckedChange={() => {}}
-                            onClick={(e) => toggleIa(c, e as unknown as React.MouseEvent)}
-                            className="data-[state=checked]:bg-primary"
-                          />
-                          IA
-                        </label>
-                        {responded ? (
-                          <CheckCheck className="h-3.5 w-3.5 text-success" />
-                        ) : (
-                          <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(c)}
+                    disabled={isDemo}
+                    aria-label={`Excluir ${c.nome ?? c.telefone ?? "cliente"}`}
+                    title={isDemo ? "Indisponível na demonstração" : "Excluir cliente"}
+                    className="absolute right-2 top-3 rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -615,6 +684,43 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="border-border bg-popover">
+          <DialogHeader>
+            <DialogTitle>Excluir cliente?</DialogTitle>
+            <DialogDescription>
+              Isso apaga permanentemente{" "}
+              {deleteTarget?.nome ?? deleteTarget?.telefone ?? "este cliente"}, o histórico de
+              mensagens, os contatos nas campanhas e a etapa no pipeline.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void deleteClient()}
+              disabled={deleting}
+            >
+              {deleting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog
         open={suggestion !== null}
         onOpenChange={(open) => {

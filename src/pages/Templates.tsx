@@ -149,7 +149,7 @@ export default function Templates() {
   }, [load]);
 
   return (
-    <div className="page-content scrollbar-hidden h-[calc(100vh-4rem)] overflow-y-auto p-4 sm:p-5 lg:p-6">
+    <div className="page-content scrollbar-hidden h-[calc(100vh-76px)] overflow-y-auto p-4 sm:p-5 lg:p-6">
       <div className="mx-auto max-w-[1600px]">
         <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -259,23 +259,23 @@ function TemplateDetails({
             {template?.category} · {template?.language} · {template?.status}
           </DialogDescription>
         </DialogHeader>
-        <div className="rounded-2xl bg-[#0b141a] p-4">
-          <div className="overflow-hidden rounded-lg bg-[#202c33] shadow-xl">
+        <div className="rounded-2xl bg-[#eaf1ed] p-4">
+          <div className="overflow-hidden rounded-lg bg-white shadow-xl">
             <div className="p-4">
               {header?.text && (
-                <p className="mb-2 font-bold text-[#e9edef]">{String(header.text)}</p>
+                <p className="mb-2 font-bold text-slate-900">{String(header.text)}</p>
               )}
-              <p className="min-h-16 whitespace-pre-wrap text-sm leading-5 text-[#e9edef]">
+              <p className="min-h-16 whitespace-pre-wrap text-sm leading-5 text-slate-800">
                 {String(body?.text ?? "Conteúdo não disponível")}
               </p>
-              {footer?.text && <p className="mt-3 text-xs text-[#8696a0]">{String(footer.text)}</p>}
+              {footer?.text && <p className="mt-3 text-xs text-slate-500">{String(footer.text)}</p>}
             </div>
             {buttonItems.length > 0 && (
-              <div className="border-t border-[#374248]">
+              <div className="border-t border-slate-200">
                 {buttonItems.map((button, index) => (
                   <div
                     key={index}
-                    className="border-b border-[#374248] px-3 py-2.5 text-center text-xs font-semibold text-[#20c873] last:border-0"
+                    className="border-b border-slate-200 px-3 py-2.5 text-center text-xs font-semibold text-[#128a53] last:border-0"
                   >
                     {String(button.text ?? "Botão")}
                   </div>

@@ -24,11 +24,11 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
   return (
     <main
       className={cn(
-        "min-h-screen bg-[#070b0d] text-white lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(520px,0.92fr)]",
+        "auth-light min-h-screen bg-[#f5f7f8] text-[#172126] lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(520px,0.92fr)]",
         className,
       )}
     >
-      <ConstellationGrid className="hidden border-r border-white/[0.08] lg:block">
+      <ConstellationGrid className="hidden border-r border-slate-200 lg:block">
         <section className="flex h-full px-10 py-9 xl:px-16 xl:py-12">
           <div className="flex w-full flex-col">
             <div className="my-auto max-w-2xl">
@@ -42,7 +42,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
                   Gerencie conversas, <span className="text-[#20c873]">campanhas e automações</span>{" "}
                   com eficiência
                 </h1>
-                <p className="mt-7 max-w-md text-base leading-7 text-white/65 xl:text-lg">
+                <p className="mt-7 max-w-md text-base leading-7 text-slate-600 xl:text-lg">
                   Centralize o atendimento do WhatsApp e mantenha sua operação fluindo em um só
                   lugar.
                 </p>
@@ -53,7 +53,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
         </section>
       </ConstellationGrid>
 
-      <section className="flex min-h-screen flex-col bg-[#0a0f12] px-6 py-7 sm:px-10 lg:px-14 xl:px-20">
+      <section className="flex min-h-screen flex-col bg-white px-6 py-7 sm:px-10 lg:px-14 xl:px-20">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,7 +64,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
             <h2 className="text-3xl font-extrabold tracking-[-0.045em] sm:text-[2.6rem]">
               Entre na sua operação
             </h2>
-            <p className="mt-3 max-w-md text-sm leading-6 text-white/60 sm:text-base">
+            <p className="mt-3 max-w-md text-sm leading-6 text-slate-500 sm:text-base">
               Acesso administrativo
             </p>
           </div>
@@ -77,7 +77,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
                 autoComplete="username"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="h-14 w-full rounded-lg border border-white/[0.13] bg-[#080c0f] px-4 text-[15px] text-white outline-none transition placeholder:text-white/25 hover:border-white/25 focus:border-[#20c873] focus:ring-2 focus:ring-[#20c873]/15"
+                className="h-14 w-full rounded-xl border border-slate-200 bg-[#f8fafb] px-4 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#15965b] focus:ring-2 focus:ring-[#20c873]/15"
                 placeholder="operador@empresa.com"
                 required
               />
@@ -91,14 +91,14 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
                   autoComplete="current-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="h-14 w-full rounded-lg border border-white/[0.13] bg-[#080c0f] px-4 pr-12 text-[15px] text-white outline-none transition placeholder:text-white/25 hover:border-white/25 focus:border-[#20c873] focus:ring-2 focus:ring-[#20c873]/15"
+                  className="h-14 w-full rounded-xl border border-slate-200 bg-[#f8fafb] px-4 pr-12 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#15965b] focus:ring-2 focus:ring-[#20c873]/15"
                   placeholder="Sua senha"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-md text-white/45 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873]"
+                  className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873]"
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -109,7 +109,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="group flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-[#20c873] px-5 text-[15px] font-extrabold text-[#03150b] transition hover:bg-[#2ed981] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f12] disabled:cursor-not-allowed disabled:opacity-55"
+              className="group flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#15965b] px-5 text-[15px] font-bold text-white transition hover:bg-[#117c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15965b] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -122,10 +122,7 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
             </button>
           </form>
 
-          <div
-            className="my-5 text-center text-[10px] text-white/30"
-            aria-hidden="true"
-          >
+          <div className="my-5 text-center text-[10px] text-slate-400" aria-hidden="true">
             acesso de demonstração
           </div>
 
@@ -133,9 +130,9 @@ export const SignInPage = ({ className, onSubmit, onDemo, loading = false }: Sig
             type="button"
             onClick={() => void onDemo?.()}
             disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-white/[0.13] bg-white/[0.035] px-5 text-sm font-bold text-white/80 transition hover:border-[#20c873]/55 hover:bg-[#20c873]/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#20c873] disabled:cursor-not-allowed disabled:opacity-55"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#1b5144] bg-[#173c33] px-5 text-sm font-semibold text-white shadow-[0_5px_16px_-10px_rgba(18,44,37,.7)] transition hover:border-[#0f3029] hover:bg-[#0f3029] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08794a] disabled:cursor-not-allowed disabled:opacity-55"
           >
-            <MonitorPlay className="h-4 w-4 text-[#20c873]" />
+            <MonitorPlay className="h-4 w-4 text-[#b6f3d1]" />
             Acesso demo
           </button>
         </motion.div>
@@ -149,7 +146,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   <div className="space-y-2">
     <label
       htmlFor={label === "E-mail" ? "email" : "password"}
-      className="text-sm font-semibold text-white/80"
+      className="text-sm font-semibold text-slate-700"
     >
       {label}
     </label>
@@ -160,7 +157,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 const SecurityNote = ({ className }: { className?: string }) => (
   <div
     className={cn(
-      "flex items-center justify-center gap-2 text-[11px] font-medium text-white/30",
+      "flex items-center justify-center gap-2 text-[11px] font-medium text-slate-500",
       className,
     )}
   >
