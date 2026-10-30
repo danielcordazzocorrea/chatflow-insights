@@ -37,7 +37,7 @@ export const json = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-const firstStringFromDict = (name: string): string | undefined => {
+export const firstStringFromDict = (name: string): string | undefined => {
   const raw = Deno.env.get(name);
   if (!raw) return undefined;
   try {

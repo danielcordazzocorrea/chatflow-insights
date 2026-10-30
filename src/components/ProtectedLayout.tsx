@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { Outlet, Navigate, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, MessageCircleMore, LogOut, RadioTower, Megaphone } from "lucide-react";
+import {
+  LayoutDashboard,
+  MessageCircleMore,
+  LogOut,
+  RadioTower,
+  Megaphone,
+  BotMessageSquare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BrandChatIcon from "@/components/BrandChatIcon";
 import { AccessProvider, type AccessRole } from "@/contexts/AccessContext";
@@ -22,21 +29,19 @@ export default function ProtectedLayout() {
     if (visualPreview || localDemo) return;
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return setStatus("anon");
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("access_profiles")
         .select("role")
         .eq("user_id", data.user.id)
         .maybeSingle();
-      // Compatibilidade durante a implantação: antes da migração criar a
-      // tabela, preserva o comportamento normal da conta já existente.
-      // Depois que a tabela existe, ausência de perfil sempre cai em demo.
-      const accessTableMissing =
-        profileError?.code === "42P01" || profileError?.code === "PGRST205";
-      setRole(accessTableMissing || profile?.role === "owner" ? "owner" : "demo");
+      setRole(profile?.role === "owner" ? "owner" : "demo");
       setStatus("authed");
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) setStatus("anon");
+      if (!session) {
+        sessionStorage.removeItem("whats-ops-ai-agent-drafts");
+        setStatus("anon");
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [localDemo, visualPreview]);
@@ -51,6 +56,7 @@ export default function ProtectedLayout() {
   if (status === "anon") return <Navigate to="/auth" replace state={{ from: location }} />;
 
   const logout = async () => {
+    sessionStorage.removeItem("whats-ops-ai-agent-drafts");
     if (localDemo) {
       endDemoSession();
     } else {
@@ -70,6 +76,7 @@ export default function ProtectedLayout() {
       label: "Chat",
       icon: MessageCircleMore,
     },
+    ...(role === "owner" ? [{ to: "/agente-ia", label: "Agente IA", icon: BotMessageSquare }] : []),
     {
       to: "/campanhas",
       label: "Campanhas",
