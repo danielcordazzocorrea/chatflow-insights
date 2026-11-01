@@ -10,20 +10,22 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsDemo } from "@/contexts/AccessContext";
 
 type Message = { id: string; role: "user" | "assistant"; text: string; createdAt: string };
 type Conversation = { id: string; title: string; messages: Message[] };
 
-const STORAGE_KEY = "whats-ops-ai-agent-drafts";
+const OWNER_STORAGE_KEY = "whats-ops-ai-agent-conversations-v1";
+const DEMO_STORAGE_KEY = "whats-ops-ai-agent-demo-preview";
 const suggestions = [
   "Resuma os atendimentos de hoje",
   "Quais leads precisam de atenção?",
   "Faça um relatório do pipeline",
 ];
 
-function readConversations(): Conversation[] {
+function readConversations(storageKey: string): Conversation[] {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "[]");
+    const saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "[]");
     if (!Array.isArray(saved)) return [];
     return saved
       .filter(
@@ -51,8 +53,14 @@ function readConversations(): Conversation[] {
 }
 
 export default function AIAgent() {
-  const [conversations, setConversations] = useState<Conversation[]>(readConversations);
-  const [activeId, setActiveId] = useState<string | null>(() => readConversations()[0]?.id ?? null);
+  const isDemo = useIsDemo();
+  const storageKey = isDemo ? DEMO_STORAGE_KEY : OWNER_STORAGE_KEY;
+  const [conversations, setConversations] = useState<Conversation[]>(() =>
+    readConversations(storageKey),
+  );
+  const [activeId, setActiveId] = useState<string | null>(
+    () => readConversations(storageKey)[0]?.id ?? null,
+  );
   const [draft, setDraft] = useState("");
   const [pendingMessage, setPendingMessage] = useState("");
   const [sendError, setSendError] = useState("");
@@ -64,8 +72,8 @@ export default function AIAgent() {
     document.title = "Agente IA | Whats·Ops";
   }, []);
   useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-  }, [conversations]);
+    sessionStorage.setItem(storageKey, JSON.stringify(conversations));
+  }, [conversations, storageKey]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [activeId, active?.messages.length, pendingMessage]);
@@ -84,6 +92,30 @@ export default function AIAgent() {
     if (!text || pendingMessage) return;
     const id = activeId ?? crypto.randomUUID();
     setSendError("");
+    if (isDemo) {
+      const message: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        text,
+        createdAt: new Date().toISOString(),
+      };
+      setConversations((current) => {
+        const existing = current.find((conversation) => conversation.id === id);
+        if (existing)
+          return current.map((conversation) =>
+            conversation.id === id
+              ? { ...conversation, messages: [...conversation.messages, message] }
+              : conversation,
+          );
+        return [
+          { id, title: text.length > 36 ? `${text.slice(0, 36)}…` : text, messages: [message] },
+          ...current,
+        ];
+      });
+      setActiveId(id);
+      setDraft("");
+      return;
+    }
     setPendingMessage(text);
     setDraft("");
     try {
@@ -194,7 +226,9 @@ export default function AIAgent() {
           )}
         </div>
         <p className="agent-sidebar-note">
-          Conversas desta sessão. Excluir remove apenas a cópia do navegador.
+          {isDemo
+            ? "Prévia local: as mensagens ficam apenas nesta sessão do navegador."
+            : "Conversas desta sessão. Excluir remove apenas a cópia do navegador."}
         </p>
       </aside>
 
@@ -216,7 +250,7 @@ export default function AIAgent() {
             <p>Seu assistente para o CRM</p>
           </div>
           <span className="agent-status">
-            <span /> {pendingMessage ? "Respondendo" : "Agente CRM"}
+            <span /> {isDemo ? "Prévia sem IA" : pendingMessage ? "Respondendo" : "Agente CRM"}
           </span>
         </header>
 
@@ -229,8 +263,9 @@ export default function AIAgent() {
               <span className="agent-eyebrow">UM NOVO JEITO DE TRABALHAR</span>
               <h2>Como posso ajudar você?</h2>
               <p>
-                Pergunte sobre clientes, histórico de atendimento, etapas do pipeline ou solicite um
-                relatório do CRM.
+                {isDemo
+                  ? "Explore a interface do agente. No demo, as mensagens não são enviadas e não há respostas da IA."
+                  : "Pergunte sobre clientes, histórico de atendimento, etapas do pipeline ou solicite um relatório do CRM."}
               </p>
               <div className="agent-suggestions">
                 {suggestions.map((suggestion) => (
@@ -242,6 +277,11 @@ export default function AIAgent() {
             </div>
           ) : (
             <div className="agent-thread">
+              {isDemo && (
+                <div className="agent-thread-notice">
+                  <Sparkles size={17} /> Esta é uma prévia. Nenhuma mensagem foi enviada à IA.
+                </div>
+              )}
               {active?.messages.map((message) => (
                 <div
                   key={message.id}
@@ -311,7 +351,11 @@ export default function AIAgent() {
               {sendError} Tente enviar novamente.
             </p>
           ) : (
-            <p>O agente pode consultar o CRM. Alterações exigem sua aprovação.</p>
+            <p>
+              {isDemo
+                ? "Prévia local: o agente não está conectado no demo."
+                : "O agente pode consultar o CRM. Alterações exigem sua aprovação."}
+            </p>
           )}
         </div>
       </section>

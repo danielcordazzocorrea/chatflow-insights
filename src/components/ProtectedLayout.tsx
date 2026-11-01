@@ -39,7 +39,9 @@ export default function ProtectedLayout() {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!session) {
+        sessionStorage.removeItem("whats-ops-ai-agent-conversations-v1");
         sessionStorage.removeItem("whats-ops-ai-agent-drafts");
+        sessionStorage.removeItem("whats-ops-ai-agent-demo-preview");
         setStatus("anon");
       }
     });
@@ -56,7 +58,9 @@ export default function ProtectedLayout() {
   if (status === "anon") return <Navigate to="/auth" replace state={{ from: location }} />;
 
   const logout = async () => {
+    sessionStorage.removeItem("whats-ops-ai-agent-conversations-v1");
     sessionStorage.removeItem("whats-ops-ai-agent-drafts");
+    sessionStorage.removeItem("whats-ops-ai-agent-demo-preview");
     if (localDemo) {
       endDemoSession();
     } else {
@@ -76,7 +80,7 @@ export default function ProtectedLayout() {
       label: "Chat",
       icon: MessageCircleMore,
     },
-    ...(role === "owner" ? [{ to: "/agente-ia", label: "Agente IA", icon: BotMessageSquare }] : []),
+    { to: "/agente-ia", label: "Agente IA", icon: BotMessageSquare },
     {
       to: "/campanhas",
       label: "Campanhas",

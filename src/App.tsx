@@ -9,7 +9,6 @@ import CampaignDetails from "@/pages/CampaignDetails";
 import Templates from "@/pages/Templates";
 import AIAgent from "@/pages/AIAgent";
 import ProtectedLayout from "@/components/ProtectedLayout";
-import OwnerOnly from "@/components/OwnerOnly";
 
 const queryClient = new QueryClient();
 
@@ -23,14 +22,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/chat" element={<Chat />} />
-            <Route
-              path="/agente-ia"
-              element={
-                <OwnerOnly>
-                  <AIAgent />
-                </OwnerOnly>
-              }
-            />
+            <Route path="/agente-ia" element={<AIAgent />} />
             <Route path="/campanhas" element={<Campaigns />} />
             <Route path="/campanhas/templates" element={<Templates />} />
             <Route path="/campanhas/:campaignId" element={<CampaignDetails />} />
